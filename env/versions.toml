@@ -1,0 +1,55 @@
+# Pinned component sources for rhetsim-dev-platform.
+# Consumed by scripts/fetch-sources.sh (via scripts/lib/versions.py).
+# `path` is relative to repos/.
+
+[components.rhetsim]
+type = "git"
+url = "git@github.com:hetworld/rhetsim.git"
+ref = "68efa759f653c1b1f1fc1cb6c88bb1f28920d8a5"
+branch = "dev"
+path = "rhetsim"
+
+[components.opensbi]
+type = "git"
+url = "https://github.com/hetworld/opensbi.git"
+ref = "d0139edf3168bb63df9b2a499e9031a1a8edd65e"
+branch = "main"
+path = "software/opensbi"
+
+[components.linux]
+type = "git"
+url = "git@github.com:hetworld/linux.git"
+ref = "c79441cdbdb3df1e3c7ea86ed58da15178d0e2b0"
+branch = "main"
+path = "software/linux"
+
+[components.rhetsim-initramfs]
+type = "git"
+url = "git@github.com:hetworld/rhetsim-initramfs.git"
+ref = "46a4e95637b4c40121228dd16006ce4e5a06631e"
+branch = "main"
+path = "software/rhetsim-initramfs"
+
+[components.busybox]
+type = "tar"
+url = "https://busybox.net/downloads/busybox-1.36.1.tar.bz2"
+sha256 = "b8cc24c9574d809e7279c3be349795c5d5ceb6fdf19ca709f80cde50e47de314"
+archive = "busybox-1.36.1.tar.bz2"
+path = "software/busybox"
+strip_components = 1
+
+[components.musl]
+type = "tar"
+url = "https://musl.libc.org/releases/musl-1.2.5.tar.gz"
+sha256 = "a9a118bbe84d8764da0ea0d28b3ab3fae8477fc7e4085d90102b8596fc7c75e4"
+archive = "musl-1.2.5.tar.gz"
+path = "toolchain/musl"
+strip_components = 1
+
+[components.gcc]
+type = "tar"
+url = "https://ftp.gnu.org/gnu/gcc/gcc-11.4.0/gcc-11.4.0.tar.xz"
+sha256 = "3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9"
+archive = "gcc-11.4.0.tar.xz"
+path = "toolchain/gcc"
+strip_components = 1

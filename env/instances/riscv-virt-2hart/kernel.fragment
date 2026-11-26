@@ -1,0 +1,4 @@
+# Instance-specific kernel options, appended after the global defconfig.
+# Keep in sync with env/configs/linux/fragments/smp-2hart.config.
+CONFIG_SMP=y
+CONFIG_NR_CPUS=2

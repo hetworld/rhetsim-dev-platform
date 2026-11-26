@@ -1,0 +1,30 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: SDK version (for example 0.1.0)
+        required: true
+        default: 0.1.0-dev
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the repository
+        run: scripts/tests/smoke.sh
+
+      - name: Packaging note
+        run: |
+          echo "SDK packaging needs a prebuilt instance (workspace/instances/<name>/bin)."
+          echo "Until P4 lands, package on a build host with:"
+          echo "  scripts/package-sdk.sh --instance riscv-virt-2hart --version ${VERSION:-0.1.0-dev}"
+          echo "  scripts/publish-sdk.sh --version ${VERSION:-0.1.0-dev} --execute"
+        env:
+          VERSION: ${{ inputs.version }}

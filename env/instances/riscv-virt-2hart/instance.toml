@@ -1,0 +1,25 @@
+name = "riscv-virt-2hart"
+description = "RV64IMA, 2 harts, Linux 6.1 + BusyBox initramfs"
+
+[components]
+rhetsim = "68efa759f653c1b1f1fc1cb6c88bb1f28920d8a5"
+linux = "c79441cdbdb3df1e3c7ea86ed58da15178d0e2b0"
+opensbi = "d0139edf3168bb63df9b2a499e9031a1a8edd65e"
+rhetsim-initramfs = "46a4e95637b4c40121228dd16006ce4e5a06631e"
+busybox = "1.36.1"
+musl = "1.2.5"
+
+[source]
+worktrees = ["rhetsim"]
+
+[platform]
+manifest = "platform.toml"
+dtb = "riscv-virt.dtb"
+
+[kernel]
+defconfig = "rv64ima_defconfig"
+fragments = ["smp-2hart.config", "initramfs.config"]
+
+[run]
+jit = true
+trace = ["int", "plic"]

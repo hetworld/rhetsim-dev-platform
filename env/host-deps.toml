@@ -1,0 +1,32 @@
+# Host dependencies checked by scripts/check-host.sh.
+# Versions are informational; the script checks command availability.
+
+[required]
+git = ">=2.30"
+make = ">=4.0"
+gcc = ">=10"
+bison = ">=3.0"
+flex = ">=2.6"
+bc = ">=1.07"
+python3 = ">=3.8"
+cargo = ">=1.75"
+rustc = ">=1.75"
+flock = "any"
+cpio = "any"
+file = "any"
+sha256sum = "any"
+tar = "any"
+curl = "any"
+
+[cross]
+riscv64-linux-gnu-gcc = ">=11"
+riscv64-linux-gnu-ar = "any"
+riscv64-linux-gnu-objcopy = "any"
+riscv64-linux-gnu-nm = "any"
+
+[optional]
+tmux = "interactive console sessions"
+jq = "JSON tooling"
+zstd = "faster archives"
+xz = "extract gcc source"
+bzip2 = "extract BusyBox source"

@@ -1,0 +1,18 @@
+# Fetched component sources (only repos/README.md is tracked)
+/repos/*
+!/repos/README.md
+
+# Instances, build caches and release artifacts
+/workspace/
+
+# Local Claude settings
+.claude/settings.local.json
+
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
+*.orig
+*.rej
+__pycache__/
+*.pyc

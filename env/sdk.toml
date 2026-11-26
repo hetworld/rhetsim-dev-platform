@@ -1,0 +1,25 @@
+# SDK bundle contract. The authoritative prose spec is docs/sdk-spec.md.
+
+[sdk]
+name = "rhetsim-sdk"
+schema_version = 1
+
+[layout]
+bin = "bin"
+firmware = "firmware"
+kernel = "kernel"
+platforms = "platforms"
+rootfs = "rootfs"
+toolchain = "toolchain"
+examples = "examples"
+scripts = "scripts"
+
+[contents]
+bin = ["rhetsim-cli"]
+firmware = ["fw_jump.bin"]
+kernel = ["Image"]
+platforms = ["riscv-virt.toml", "riscv-virt.dtb"]
+rootfs = ["initramfs.cpio"]
+examples = ["hello"]
+scripts = ["run.sh"]
+toolchain = ["sysroot"]

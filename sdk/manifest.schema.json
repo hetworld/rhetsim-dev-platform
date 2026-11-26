@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RhetSim SDK manifest",
+  "type": "object",
+  "required": ["schema_version", "name", "version", "created", "instance", "artifacts"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "name": {"type": "string"},
+    "version": {"type": "string"},
+    "created": {"type": "string"},
+    "instance": {"type": "string"},
+    "host": {
+      "type": "object",
+      "properties": {
+        "arch": {"type": "string"},
+        "glibc": {"type": "string"}
+      }
+    },
+    "components": {"type": "object"},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "size"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "licenses": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "source_availability": {"type": "string"}
+  }
+}
