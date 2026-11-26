@@ -28,8 +28,11 @@ Rules:
 - Shared artifacts are content-addressed and read-only; instance `bin/` entries link
   to them by default (`--copy` materializes copies). The root filesystem and kernel
   are built at most once per input set, never per instance; `--rootfs prebuilt` uses
-  the `initramfs.cpio` committed in `rhetsim-initramfs`. One active run per instance
-  is enforced with `run/lock` (`flock`).
+  the `initramfs.cpio` committed in `rhetsim-initramfs`.
+- The kernel is built **without** an embedded initramfs. The rootfs is an external
+  initrd: the simulator loads it into DRAM and writes `linux,initrd-start/end` into
+  the DTB `/chosen` node. Rootfs changes do not rebuild the kernel.
+- One active run per instance is enforced with `run/lock` (`flock`).
 - Never commit `repos/`, `workspace/`, or `.claude/settings.local.json`.
 - The Claude project memory directory is symlinked to `docs/memory/`.
 - Commits must carry `Signed-off-by: Leo Hou <leohou1402@gmail.com>` and no AI

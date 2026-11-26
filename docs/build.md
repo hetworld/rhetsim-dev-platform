@@ -51,7 +51,9 @@ This reads `env/versions.toml` and populates `repos/`:
 
   This is a bootstrap convenience; it records `reused_from` in
   `bin/runtime.manifest.json`. It copies by default; pass `--link` to point at the
-  existing tree instead.
+  existing tree instead. It consumes the legacy tree as-is, so an old
+  embedded-initramfs kernel stays embedded; use `./run.sh build` for the
+  external-initrd layout.
 - The underlying implementations remain in `scripts/instance-*.sh`; `./run.sh` is
   the single command entry.
 
@@ -72,9 +74,10 @@ and reuses `workspace/shared/build/` across instances:
   ./run.sh build riscv-virt-2hart --rootfs prebuilt
   ```
 
-- The kernel `Image` embeds the initramfs at build time, so changing the rootfs
-  inputs triggers one kernel rebuild; the resulting `Image` is then cached and
-  shared by every instance with the same inputs.
+- The kernel is built **without** an embedded initramfs. The rootfs is an external
+  initrd: `instance-run.sh` passes `--initrd`, and the simulator writes
+  `linux,initrd-start/end` into the DTB `/chosen` node. Changing the rootfs no
+  longer rebuilds the kernel; the kernel and rootfs are independent artifacts.
 - `./run.sh export` dereferences the symlinks, so an exported instance is
   self-contained.
 
@@ -87,7 +90,7 @@ and reuses `workspace/shared/build/` across instances:
 2. `build-simulator.sh` — `cargo build --release --bin rhetsim-cli`.
 3. `build-firmware.sh` — OpenSBI `fw_jump.bin` for `generic`/RV64.
 4. `build-initramfs.sh` — BusyBox + `init.sh` packed with `gen_init_cpio`.
-5. `build-kernel.sh` — Linux 6.1 with the instance config and embedded initramfs.
+5. `build-kernel.sh` — Linux 6.1 with the instance config, no embedded initramfs.
 
 Every stage is cached by a build ID derived from its inputs. Re-running is cheap
 unless a pinned commit, config, patch or toolchain changed.
@@ -100,8 +103,12 @@ unless a pinned commit, config, patch or toolchain changed.
 - musl is installed static-only (`make install SHARED_LIBS=`); the sysroot has no
   `libc.so`, matching the static user space. `musl-gcc` generates its specs file
   from `lib/musl-gcc.specs.in` at run time, so sysroots and SDKs are relocatable.
-- Kernel `CONFIG_INITRAMFS_SOURCE` is set at build time to the absolute path of the
-  built `initramfs.cpio`; never store an absolute path in the committed defconfig.
+- The kernel is built **without** an embedded initramfs. `CONFIG_INITRAMFS_SOURCE`
+  stays empty; `instance-run.sh` passes the rootfs via `--initrd`, and the simulator
+  writes `linux,initrd-start/end` into the DTB `/chosen` node.
+- Kernel builds are out-of-tree (`make O=...`), which requires a clean source tree
+  (no in-tree `.config`). Use a clean clone or a detached `git worktree`; the build
+  script rejects a source tree that already has `.config`.
 - Build the kernel with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-`. A bare
   `make` reconfigures the tree for the host architecture.
 - The kernel defconfig is a full config captured from the working bring-up, not the

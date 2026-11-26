@@ -56,6 +56,7 @@ path = sys.argv[1]
 text = open(path, encoding="utf-8").read()
 text = re.sub(r"(?m)^firmware = .*$", 'firmware = "../firmware/fw_jump.bin"', text)
 text = re.sub(r"(?m)^kernel = .*$", 'kernel = "../kernel/Image"', text)
+text = re.sub(r"(?m)^initrd = .*$", 'initrd = "../rootfs/initramfs.cpio"', text)
 text = re.sub(r"(?m)^dtb = .*$", 'dtb = "riscv-virt.dtb"', text)
 open(path, "w", encoding="utf-8").write(text)
 PY
@@ -85,9 +86,9 @@ Instance: $INSTANCE
 Layout:
 - bin/rhetsim-cli       RISC-V simulator (host x86-64 binary)
 - firmware/fw_jump.bin  OpenSBI firmware
-- kernel/Image          Linux kernel with embedded initramfs
+- kernel/Image          Linux kernel (rootfs is an external initrd)
 - platforms/            Platform manifest and DTB
-- rootfs/initramfs.cpio Embedded root filesystem
+- rootfs/initramfs.cpio Root filesystem loaded as initrd
 - toolchain/            Optional cross sysroot
 - examples/hello        Example user-space program
 - scripts/run.sh        Convenience launcher

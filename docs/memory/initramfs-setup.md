@@ -1,6 +1,6 @@
 ---
 name: initramfs-setup
-description: "Where RhetSim's embedded RISC-V initramfs lives and how the kernel build is configured"
+description: "Where RhetSim's initramfs lives and how kernel/rootfs are built (embedded legacy vs external initrd)"
 metadata:
   node_type: memory
   type: project
@@ -16,5 +16,18 @@ Kernel build state in `/home/leo/leo/workspace/rhet/linux-6.1`:
 - The embedded `/init` prints `/proc/interrupts`, sleeps 1s, prints again, then `RHETSIM_INIT_OK` and starts the shell (so a timer failure fails the boot test).
 - Verify embedding via `zcat usr/initramfs_inc_data | cpio -itv`.
 
+## Dev-platform update (2026-11-27)
+
+The dev-platform no longer embeds the initramfs in the kernel. `scripts/build-kernel.sh`
+builds with `CONFIG_INITRAMFS_SOURCE=""`; `rhetsim-cli --initrd` loads the cpio into
+DRAM and writes `linux,initrd-start/end` into the DTB `/chosen` node. Changing the
+rootfs does not rebuild the kernel. The embedded-initramfs details above describe the
+historical rhetsim tree.
+
+Verified 2026-11-27: kernel without embedded initramfs + simulator `--initrd` boots
+to `RHETSIM_INIT_OK`; the same kernel without `--initrd` panics with
+`VFS: Unable to mount root fs`. The out-of-tree kernel build requires a clean source
+tree (no in-tree `.config`); use a clean clone or detached worktree.
+
 **Why:** The kernel tree and the soft-float toolchain are outside the main repo, so this state is not recorded there.
-**How to apply:** Rebuild the kernel only with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- ...`; a bare `make` once reconfigured the tree for x86 and had to be restored. See [[softfloat-busybox-toolchain]] for the userland toolchain.
+**How to apply:** Rebuild the kernel only with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- ...`; a bare `make` once reconfigured the tree for x86 and had to be restored. For the dev-platform, pass the cpio via `--initrd`; the old embedded setup is historical. See [[softfloat-busybox-toolchain]] for the userland toolchain.

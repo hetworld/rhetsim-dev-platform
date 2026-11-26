@@ -54,6 +54,10 @@ Instance definitions are versioned; instance workspaces are not. You can delete
 - The root filesystem and kernel are shared artifacts: they are built at most once
   per input set, never per instance. `--rootfs prebuilt` can consume the committed
   `initramfs.cpio` without running BusyBox.
+- The kernel is built without an embedded initramfs. The rootfs is loaded as an
+  external initrd: the simulator places it in DRAM and writes
+  `linux,initrd-start/end` into the DTB `/chosen` node, so changing the rootfs does
+  not rebuild the kernel.
 - Build scripts use a cache key derived from component commit, config, patches
   and toolchain; concurrent identical builds are expected to converge on the same
   immutable entry.

@@ -9,9 +9,10 @@ See `sdk/layout.md`. The bundle contains:
 
 - `bin/rhetsim-cli` — host x86-64 simulator binary.
 - `firmware/fw_jump.bin` — OpenSBI.
-- `kernel/Image` — Linux with embedded initramfs.
+- `kernel/Image` — Linux kernel; the root filesystem is not embedded.
 - `platforms/riscv-virt.toml` + `riscv-virt.dtb` — topology and device tree.
-- `rootfs/initramfs.cpio` — BusyBox-based root filesystem.
+- `rootfs/initramfs.cpio` — BusyBox-based root filesystem, loaded as an external
+  initrd via the DTB `/chosen` node (`linux,initrd-start/end`).
 - `toolchain/sysroot/` — optional `rv64ima`/`lp64` musl sysroot and `musl-gcc`.
   The sysroot is relocatable: `musl-gcc` resolves its own path and generates a specs
   file at run time, so the SDK can be extracted anywhere.

@@ -42,6 +42,9 @@ docs/       架构/构建/SDK/发布文档以及 docs/memory/ 知识库
 ./run.sh start riscv-virt-2hart --batch
 ```
 
+`--reuse-existing` 会原样使用旧目录树（包括内嵌 initramfs 的旧内核）；要验证
+外部 initrd 布局请用 `./run.sh build`。
+
 `./run.sh help` 列出所有命令；`make` 只是薄别名。默认实例是 `riscv-virt-2hart`。
 
 ## 实例模型
@@ -63,6 +66,8 @@ workspace/instances/<name>/
   根文件系统按输入集最多构建一次，不会因为创建新实例而重建；用
   `./run.sh build <name> --rootfs prebuilt` 可以直接使用已提交的 `initramfs.cpio`，
   用 `--copy` 则物化成独立副本。
+- 内核不再内嵌根文件系统。rootfs 作为独立 initrd 通过模拟器的 `--initrd` 加载，
+  修改 rootfs 不会触发内核重编。
 
 ## 构建与运行
 

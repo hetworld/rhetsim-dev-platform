@@ -45,6 +45,9 @@ During migration, reuse an existing build tree instead of rebuilding everything:
 ./run.sh start riscv-virt-2hart --batch
 ```
 
+`--reuse-existing` consumes the old tree as-is (including an embedded-initramfs
+kernel); use `./run.sh build` for the external-initrd layout.
+
 `./run.sh help` lists all commands. `make` targets are thin aliases. The default
 instance is `riscv-virt-2hart`.
 
@@ -69,6 +72,8 @@ workspace/instances/<name>/
   filesystem is built at most once per input set, not per instance; use
   `./run.sh build <name> --rootfs prebuilt` to consume the committed
   `initramfs.cpio` directly, or `--copy` to materialize copies.
+- The kernel does not embed the root filesystem. The rootfs is loaded as an external
+  initrd via the simulator's `--initrd`; changing it does not rebuild the kernel.
 
 ## Build and run
 

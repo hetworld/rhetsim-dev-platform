@@ -38,8 +38,10 @@ pipeline and populates the instance `bin/`.
 Instances link to shared cache artifacts by default (`--copy` for independent
 copies). The root filesystem is built at most once per input set, never per
 instance; `--rootfs prebuilt` skips BusyBox and uses the `initramfs.cpio` committed
-in `rhetsim-initramfs`. The kernel `Image` embeds the initramfs, so a rootfs change
-triggers one kernel rebuild, then the result is cached and shared.
+in `rhetsim-initramfs`. The kernel is built **without** an embedded initramfs; the
+rootfs is passed as an external initrd (`rhetsim-cli --initrd`, with
+`linux,initrd-start/end` in the DTB `/chosen` node), so a rootfs change does not
+rebuild the kernel.
 
 Failure points to check first:
 

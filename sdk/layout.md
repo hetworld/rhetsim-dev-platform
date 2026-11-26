@@ -9,11 +9,11 @@ rhetsim-sdk-<version>/
 ├── manifest.json          # components, checksums, host requirements, licenses
 ├── bin/rhetsim-cli        # host x86-64 simulator binary
 ├── firmware/fw_jump.bin   # OpenSBI
-├── kernel/Image           # Linux with embedded initramfs
+├── kernel/Image           # Linux kernel (rootfs is an external initrd)
 ├── platforms/
 │   ├── riscv-virt.toml    # chip topology / manifest
 │   └── riscv-virt.dtb
-├── rootfs/initramfs.cpio  # embedded root filesystem
+├── rootfs/initramfs.cpio  # root filesystem loaded as initrd
 ├── toolchain/
 │   └── sysroot/           # optional rv64ima/lp64 musl sysroot + musl-gcc
 ├── examples/hello/        # consumer example

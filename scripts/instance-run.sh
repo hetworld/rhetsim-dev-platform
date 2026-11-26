@@ -26,7 +26,8 @@ Everything else is passed to rhetsim-cli, e.g. --batch, --steps N, --trace ...,
 --no-jit, --log-level debug.
 
 Artifacts come from workspace/instances/<name>/bin; override with
-RHETSIM_BIN, RHETSIM_MANIFEST, RHETSIM_FIRMWARE, RHETSIM_KERNEL, RHETSIM_DTB.
+RHETSIM_BIN, RHETSIM_MANIFEST, RHETSIM_FIRMWARE, RHETSIM_KERNEL,
+RHETSIM_INITRD, RHETSIM_DTB.
 EOF
 }
 
@@ -52,8 +53,9 @@ BIN="${RHETSIM_BIN:-$ws/bin/rhetsim-cli}"
 MANIFEST="${RHETSIM_MANIFEST:-$ws/config/platform.toml}"
 FIRMWARE="${RHETSIM_FIRMWARE:-$ws/bin/fw_jump.bin}"
 KERNEL="${RHETSIM_KERNEL:-$ws/bin/Image}"
+INITRD="${RHETSIM_INITRD:-$ws/bin/initramfs.cpio}"
 DTB="${RHETSIM_DTB:-$ws/bin/riscv-virt.dtb}"
-for f in "$BIN" "$MANIFEST" "$FIRMWARE" "$KERNEL" "$DTB"; do
+for f in "$BIN" "$MANIFEST" "$FIRMWARE" "$KERNEL" "$INITRD" "$DTB"; do
     require_file "$f"
 done
 [ -x "$BIN" ] || die "simulator is not executable: $BIN"
@@ -80,7 +82,7 @@ for a in "${PASSTHROUGH[@]}"; do
     [ "$a" = "--batch" ] && batch=1
 done
 
-cmd=("$BIN" "$MANIFEST" --firmware "$FIRMWARE" --kernel "$KERNEL" --dtb "$DTB")
+cmd=("$BIN" "$MANIFEST" --firmware "$FIRMWARE" --kernel "$KERNEL" --initrd "$INITRD" --dtb "$DTB")
 if [ "$batch" -eq 1 ]; then
     has_uart=0 has_logfile=0 has_trace=0 has_tracefile=0
     for a in "${PASSTHROUGH[@]}"; do

@@ -14,8 +14,9 @@ require_cmd rustc
 require_cmd git
 
 commit="$(git -C "$src" rev-parse HEAD)"
-dirty="$(git -C "$src" status --porcelain | sha256sum | awk '{print $1}')"
-build_id="$(make_build_id "$commit" "$dirty" "$(rustc --version)" "$(cargo --version)" release)"
+status_hash="$(git -C "$src" status --porcelain | sha256sum | awk '{print $1}')"
+diff_hash="$(git -C "$src" diff HEAD | sha256sum | awk '{print $1}')"
+build_id="$(make_build_id "$commit" "$status_hash" "$diff_hash" "$(rustc --version)" "$(cargo --version)" release)"
 out="$SHARED_DIR/build/sim/$build_id"
 artifact="$out/rhetsim-cli"
 
@@ -34,7 +35,8 @@ chmod +x "$artifact"
 {
     echo "component=rhetsim"
     echo "commit=$commit"
-    echo "dirty=$dirty"
+    echo "status_hash=$status_hash"
+    echo "diff_hash=$diff_hash"
     echo "build_id=$build_id"
     echo "rustc=$(rustc --version)"
     echo "cargo=$(cargo --version)"

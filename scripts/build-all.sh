@@ -52,12 +52,12 @@ else
     cpio="$("$ROOT/scripts/build-initramfs.sh" --toolchain "$TOOLCHAIN_DIR" | tail -n1)"
 fi
 kernel="$("$ROOT/scripts/build-kernel.sh" \
-    --initramfs "$cpio" \
     --fragment "$ENV_DIR/configs/linux/fragments/smp-2hart.config" \
     --fragment "$ENV_DIR/configs/linux/fragments/initramfs.config" \
     --fragment "$ws/config/kernel.fragment" | tail -n1)"
 
-dtb="$REPOS_DIR/rhetsim/platforms/reference/server/riscv-virt.dtb"
+rhetsim_src="${RHETSIM_SRC:-$REPOS_DIR/rhetsim}"
+dtb="$rhetsim_src/platforms/reference/server/riscv-virt.dtb"
 require_file "$dtb"
 
 install_artifact() {

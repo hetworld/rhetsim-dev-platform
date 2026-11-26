@@ -18,8 +18,10 @@
 - Project skills, memory base and commit rules committed with the repository.
 - Verified: Linux boot to `RHETSIM_INIT_OK`, per-instance lock, SDK package +
   consumer compile, SDK boot, soft-float toolchain rebuild with a relocatable
-  sysroot, shared artifact links, and `--rootfs prebuilt` (committed cpio, no
-  BusyBox rebuild, cached on the second run).
+  sysroot, shared artifact links, `--rootfs prebuilt` (committed cpio, no BusyBox
+  rebuild, cached on the second run), and an external-initrd boot with a kernel
+  that has no embedded initramfs (no-initrd control panics with "unable to mount
+  root fs").
 
 ## P1 — sources and toolchain
 

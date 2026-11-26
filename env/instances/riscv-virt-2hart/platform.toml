@@ -63,4 +63,5 @@ base = 0x10000000
 [boot]
 firmware = "../bin/fw_jump.bin"
 kernel = "../bin/Image"
+initrd = "../bin/initramfs.cpio"
 dtb = "../bin/riscv-virt.dtb"
