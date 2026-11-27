@@ -14,7 +14,9 @@ See `sdk/layout.md`. The bundle contains:
 - `rootfs/initramfs.cpio` — BusyBox-based root filesystem, loaded as an external
   initrd via the DTB `/chosen` node (`linux,initrd-start/end`).
 - `toolchain/sysroot/` — optional `rv64ima`/`lp64` musl sysroot and `musl-gcc`.
-  The sysroot is relocatable: `musl-gcc` resolves its own path and generates a specs
+  It is built with the optional maintainer tool `tools/toolchain/build-toolchain.sh`
+  (or supplied as a pinned resource), not by the default platform build. The
+  sysroot is relocatable: `musl-gcc` resolves its own path and generates a specs
   file at run time, so the SDK can be extracted anywhere.
 - `examples/` — at least one consumer example.
 - `scripts/run.sh` — convenience launcher.

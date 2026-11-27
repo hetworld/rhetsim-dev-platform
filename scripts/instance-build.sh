@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build or link the boot artifacts for an instance.
-# Instances consume shared, content-addressed artifacts; they never rebuild the
-# root filesystem or kernel unless the shared cache is missing that input set.
+# Default build: rhetsim-cli + OpenSBI + Linux + prebuilt rootfs from
+# rhetsim-initramfs. The rootfs and toolchain are resources/tools, not part of
+# the default build.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,7 +12,6 @@ source "$ROOT/scripts/lib/common.sh"
 INSTANCE=""
 REUSE=""
 LINK_MODE=""   # empty: default (link for build-all, copy for --reuse-existing)
-ROOTFS_MODE=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --instance) INSTANCE="$2"; shift 2 ;;
@@ -20,13 +20,11 @@ while [ $# -gt 0 ]; do
         --reuse-existing=*) REUSE="${1#*=}"; shift ;;
         --link) LINK_MODE=1; shift ;;
         --copy) LINK_MODE=0; shift ;;
-        --rootfs) ROOTFS_MODE="$2"; shift 2 ;;
-        --rootfs=*) ROOTFS_MODE="${1#*=}"; shift ;;
         --help|-h)
-            echo "usage: $0 [<instance>] [--reuse-existing DIR] [--link|--copy] [--rootfs build|prebuilt]"
-            echo "  default build uses the shared cache and links artifacts into bin/"
+            echo "usage: $0 [<instance>] [--reuse-existing DIR] [--link|--copy]"
+            echo "  default build: simulator + OpenSBI + Linux + prebuilt rootfs"
             echo "  --copy           materialize independent copies in the instance"
-            echo "  --rootfs prebuilt reuse the committed initramfs.cpio (no BusyBox build)"
+            echo "  --reuse-existing consume an old rhet/ tree as-is (legacy)"
             exit 0
             ;;
         -*) die "unknown argument: $1" ;;
@@ -47,13 +45,9 @@ if [ -z "$REUSE" ]; then
     if [ -n "$LINK_MODE" ]; then
         if [ "$LINK_MODE" -eq 1 ]; then args+=(--link); else args+=(--copy); fi
     fi
-    if [ -n "$ROOTFS_MODE" ]; then
-        args+=(--rootfs "$ROOTFS_MODE")
-    fi
     exec "$ROOT/scripts/build-all.sh" "${args[@]}"
 fi
 
-[ -z "$ROOTFS_MODE" ] || die "--rootfs is only valid without --reuse-existing"
 require_dir "$REUSE"
 sim="$REUSE/rhetsim/target/release/rhetsim-cli"
 fw="$REUSE/opensbi/build/platform/generic/firmware/fw_jump.bin"

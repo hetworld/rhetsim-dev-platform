@@ -11,11 +11,13 @@ description: Set up the RhetSim dev-platform host, fetch pinned component source
    ```
    Install anything reported missing before continuing.
 
-2. Fetch pinned sources into `repos/`:
+2. Fetch pinned sources into `repos/` and verify the lock:
    ```bash
    ./run.sh fetch
+   ./run.sh verify-lock
    ```
-   Versions and checksums come from `env/versions.toml`.
+   Versions and checksums come from `env/versions.toml`; update them only with
+   `./run.sh pin`.
 
 3. Create an instance:
    ```bash

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Build the BusyBox initramfs, or reuse the committed prebuilt cpio.
-# The result is a shared, content-addressed artifact; instances link to it.
+# Optional maintainer tool: build the BusyBox initramfs, or reuse the committed
+# prebuilt cpio. Not part of ./run.sh build; the default platform consumes the
+# cpio committed in rhetsim-initramfs.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=scripts/lib/common.sh
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../../scripts/lib/common.sh
 source "$ROOT/scripts/lib/common.sh"
 
 TOOLCHAIN_DIR=""
@@ -25,7 +26,7 @@ while [ $# -gt 0 ]; do
 done
 
 INITRAMFS_SRC="${INITRAMFS_SRC:-$REPOS_DIR/software/rhetsim-initramfs}"
-BUSYBOX_SRC="${BUSYBOX_SRC:-$REPOS_DIR/software/busybox}"
+BUSYBOX_SRC="${BUSYBOX_SRC:-$ROOT/tools/initramfs/src/busybox}"
 KERNEL_SRC="${KERNEL_SRC:-$REPOS_DIR/software/linux}"
 require_dir "$INITRAMFS_SRC"
 require_cmd git
@@ -71,7 +72,8 @@ SYSROOT="$TOOLCHAIN_DIR/sysroot"
 require_dir "$SYSROOT"
 require_file "$SYSROOT/bin/musl-gcc"
 
-build_id="$(make_build_id "$commit" "$(basename "$TOOLCHAIN_DIR")" "$(sha256_of "$BUSYBOX_SRC/.config" 2>/dev/null || echo no-config)")"
+busybox_sig="$(sha256_of "$BUSYBOX_SRC/Makefile" 2>/dev/null || echo custom)"
+build_id="$(make_build_id "$commit" "$(basename "$TOOLCHAIN_DIR")" "$busybox_sig")"
 out="$SHARED_DIR/build/initramfs/$build_id"
 artifact="$out/initramfs.cpio"
 

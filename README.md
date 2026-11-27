@@ -5,17 +5,18 @@ component sources, build the cross toolchain, simulator, firmware, kernel and
 initramfs, run isolated instances, and package SDK bundles for
 `rhetsim-software-dev-platform`.
 
-> **Status: P0 complete.** The instance lifecycle, per-instance locking, Linux
-> boot, SDK packaging and the soft-float toolchain rebuild are verified. The
-> remaining simulator/firmware/initramfs/kernel pipeline is being validated (P2);
-> during migration an instance can link an existing `rhet/` build tree with
-> `./run.sh build <instance> --reuse-existing`.
+> **Status: P1 complete / P2 in progress.** The default build (simulator + OpenSBI +
+> Linux + prebuilt rootfs), instance lifecycle, locking, SDK packaging and
+> external-initrd boot are verified. Toolchain and rootfs rebuilds are optional
+> maintainer tools under `tools/`. During migration an instance can still link an
+> existing `rhet/` tree with `./run.sh build <instance> --reuse-existing`.
 
 ## Layout
 
 ```text
 env/        declarative environment definitions (versions, configs, patches, instances)
 scripts/    executable orchestration (build, instance, package, tests)
+tools/      optional maintainer tooling (toolchain, initramfs rebuild)
 repos/      fetched component sources (gitignored; worktree parent)
 workspace/  instances and build artifacts (gitignored)
 sdk/        SDK contract, examples and consumer scripts
@@ -32,6 +33,7 @@ definitions into artifacts under `workspace/`. Nothing under `repos/` or
 ```bash
 ./run.sh check-host
 ./run.sh fetch
+./run.sh verify-lock
 ./run.sh create riscv-virt-2hart
 ./run.sh build riscv-virt-2hart
 ./run.sh start riscv-virt-2hart
@@ -68,16 +70,17 @@ workspace/instances/<name>/
 - One active run per instance is enforced with `run/lock`; different instances
   can run in parallel.
 - Expensive artifacts are shared, content-addressed and read-only under
-  `workspace/shared/`; instance `bin/` entries link to them by default. The root
-  filesystem is built at most once per input set, not per instance; use
-  `./run.sh build <name> --rootfs prebuilt` to consume the committed
-  `initramfs.cpio` directly, or `--copy` to materialize copies.
+  `workspace/shared/`; instance `bin/` entries link to them by default (`--copy`
+  materializes copies). The root filesystem is a **prebuilt resource** from
+  `rhetsim-initramfs`; the platform does not build it. OpenSBI and Linux are built
+  locally so simulator and software can be debugged in sync.
 - The kernel does not embed the root filesystem. The rootfs is loaded as an external
   initrd via the simulator's `--initrd`; changing it does not rebuild the kernel.
 
 ## Build and run
 
-- `./run.sh build <name>` builds or links the boot stack.
+- `./run.sh build <name>` builds `rhetsim-cli`, OpenSBI and Linux, then assembles
+  the prebuilt rootfs.
 - `./run.sh start <name>` starts the simulator interactively.
 - `./run.sh start <name> --batch` runs non-interactively and writes
   `workspace/instances/<name>/logs/<run-id>/uart.log`.
@@ -88,9 +91,10 @@ Details: [docs/build.md](docs/build.md), [docs/architecture.md](docs/architectur
 ## SDK
 
 `./run.sh sdk <name> --version <ver>` produces `workspace/dist/rhetsim-sdk-<ver>/`,
-a tarball and checksums. The SDK carries the
-simulator binary, firmware, kernel, DTB, initramfs, sysroot/toolchain, examples
-and consumer scripts. See [sdk/layout.md](sdk/layout.md) and
+a tarball and checksums. The SDK carries the simulator binary, firmware, kernel,
+DTB, initramfs, optional sysroot, examples and consumer scripts. Build the sysroot
+with the optional maintainer tool `tools/toolchain/build-toolchain.sh` if the SDK
+should include one. See [sdk/layout.md](sdk/layout.md) and
 [docs/sdk-spec.md](docs/sdk-spec.md).
 
 Never commit large binaries to git: release them through GitHub Releases, an OCI

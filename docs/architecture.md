@@ -11,8 +11,9 @@ does not need simulator source.
 run.sh      single command entry: fetch/create/build/start/sdk/test/...
 env/        declarative inputs: versions, configs, patches, instance definitions
 scripts/    executable orchestration: fetch, build, instance, package, tests
+tools/      optional maintainer tooling: toolchain and initramfs rebuilds
 repos/      canonical component clones and worktree parent (gitignored)
-workspace/  instances, shared build cache, logs and release artifacts (gitignored)
+workspace/  instances, shared build cache/resources, logs and release artifacts
 sdk/        SDK layout contract, consumer examples and SDK-side scripts
 docs/       architecture/build/SDK/release docs and docs/memory/
 .claude/    project skills and shared Claude settings
@@ -23,11 +24,15 @@ docs/       architecture/build/SDK/release docs and docs/memory/
 ## Data flow
 
 ```text
-env/versions.toml ──fetch──▶ repos/
+env/versions.toml ──fetch──▶ repos/{rhetsim,software/{opensbi,linux,rhetsim-initramfs}}
 env/instances/<name>/ ──create──▶ workspace/instances/<name>/{config,src}
-instance/src + env/configs ──build──▶ workspace/shared/build/<id> ──link──▶ instance/bin
+repos/rhetsim + env/configs + repos/software/{opensbi,linux}
+  ──build──▶ workspace/shared/build/<id> ──link──▶ instance/bin
+repos/software/rhetsim-initramfs/initramfs.cpio
+  ──resource──▶ workspace/shared/resources/initramfs/<id>
 instance/bin + instance/config ──run──▶ instance/logs/<run-id>/ + instance/run/
 instance/bin + sdk/ ──package──▶ workspace/dist/rhetsim-sdk-<version>/
+tools/{toolchain,initramfs} ──optional──▶ workspace/shared/toolchain, rootfs rebuilds
 ```
 
 ## Instance model
@@ -51,15 +56,17 @@ Instance definitions are versioned; instance workspaces are not. You can delete
 - Shared artifacts live under `workspace/shared/` and are content-addressed and
   read-only after publication. Instance `bin/` entries link to them by default;
   `--copy` materializes independent copies.
-- The root filesystem and kernel are shared artifacts: they are built at most once
-  per input set, never per instance. `--rootfs prebuilt` can consume the committed
-  `initramfs.cpio` without running BusyBox.
+- The root filesystem is a **prebuilt resource** from `rhetsim-initramfs`; it is
+  copied into `workspace/shared/resources/initramfs/<id>` and shared by every
+  instance. The platform does not build it by default.
+- OpenSBI and Linux are built locally (so simulator and software can be debugged in
+  sync) and cached under `workspace/shared/build/`.
 - The kernel is built without an embedded initramfs. The rootfs is loaded as an
   external initrd: the simulator places it in DRAM and writes
   `linux,initrd-start/end` into the DTB `/chosen` node, so changing the rootfs does
   not rebuild the kernel.
-- Build scripts use a cache key derived from component commit, config, patches
-  and toolchain; concurrent identical builds are expected to converge on the same
+- Build scripts use a cache key derived from component commit, config, patches and
+  host compiler; concurrent identical builds are expected to converge on the same
   immutable entry.
 - One active run per instance is enforced with `workspace/instances/<name>/run/lock`
   (`flock`). Different instances can run in parallel.
@@ -75,9 +82,9 @@ Build entries are named by a short hash of their inputs:
 ```text
 workspace/shared/build/sim/<build-id>/rhetsim-cli
 workspace/shared/build/firmware/<build-id>/fw_jump.bin
-workspace/shared/build/initramfs/<build-id>/initramfs.cpio
 workspace/shared/build/linux/<build-id>/Image
-workspace/shared/toolchain/<abi-id>/sysroot
+workspace/shared/resources/initramfs/<id>/initramfs.cpio
+workspace/shared/toolchain/<abi-id>/sysroot       # optional tools/toolchain
 ```
 
 `scripts/cache-gc.sh` removes unreferenced entries older than a threshold.

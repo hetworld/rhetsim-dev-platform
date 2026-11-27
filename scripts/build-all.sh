@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Build the complete boot stack for an instance and populate its bin/.
-# Artifacts are linked from the shared cache by default; use --copy to
-# materialize independent copies.
+# Build the simulator, OpenSBI and Linux, then assemble the prebuilt rootfs.
+# The rootfs is a resource from rhetsim-initramfs; the platform does not build it.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,32 +8,21 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/common.sh"
 
 INSTANCE="$DEFAULT_INSTANCE"
-TOOLCHAIN_DIR=""
 LINK_MODE=1
-ROOTFS_MODE="build"
 while [ $# -gt 0 ]; do
     case "$1" in
         --instance) INSTANCE="$2"; shift 2 ;;
         --instance=*) INSTANCE="${1#*=}"; shift ;;
-        --toolchain) TOOLCHAIN_DIR="$2"; shift 2 ;;
-        --toolchain=*) TOOLCHAIN_DIR="${1#*=}"; shift ;;
         --link) LINK_MODE=1; shift ;;
         --copy) LINK_MODE=0; shift ;;
-        --rootfs) ROOTFS_MODE="$2"; shift 2 ;;
-        --rootfs=*) ROOTFS_MODE="${1#*=}"; shift ;;
         --help|-h)
-            echo "usage: $0 [--instance NAME] [--toolchain DIR] [--link|--copy] [--rootfs build|prebuilt]"
-            echo "  --rootfs prebuilt  reuse the committed initramfs.cpio instead of rebuilding BusyBox"
+            echo "usage: $0 [--instance NAME] [--link|--copy]"
+            echo "  builds rhetsim-cli, OpenSBI and Linux; assembles the prebuilt rootfs"
             exit 0
             ;;
         *) die "unknown argument: $1" ;;
     esac
 done
-
-case "$ROOTFS_MODE" in
-    build|prebuilt) ;;
-    *) die "invalid --rootfs mode: $ROOTFS_MODE (expected build|prebuilt)" ;;
-esac
 
 validate_instance_name "$INSTANCE"
 ws="$(instance_workspace "$INSTANCE")"
@@ -43,18 +31,34 @@ if [ ! -d "$ws" ]; then
 fi
 load_instance_env "$INSTANCE"
 
-[ -n "$TOOLCHAIN_DIR" ] || TOOLCHAIN_DIR="$("$ROOT/scripts/build-toolchain.sh" | tail -n1)"
 sim="$("$ROOT/scripts/build-simulator.sh" | tail -n1)"
 fw="$("$ROOT/scripts/build-firmware.sh" | tail -n1)"
-if [ "$ROOTFS_MODE" = "prebuilt" ]; then
-    cpio="$("$ROOT/scripts/build-initramfs.sh" --prebuilt | tail -n1)"
-else
-    cpio="$("$ROOT/scripts/build-initramfs.sh" --toolchain "$TOOLCHAIN_DIR" | tail -n1)"
-fi
 kernel="$("$ROOT/scripts/build-kernel.sh" \
     --fragment "$ENV_DIR/configs/linux/fragments/smp-2hart.config" \
     --fragment "$ENV_DIR/configs/linux/fragments/initramfs.config" \
     --fragment "$ws/config/kernel.fragment" | tail -n1)"
+
+# Root filesystem: pinned/prebuilt resource from rhetsim-initramfs.
+initramfs_src="${INITRAMFS_SRC:-$REPOS_DIR/software/rhetsim-initramfs}"
+cpio_src="$initramfs_src/initramfs.cpio"
+require_file "$cpio_src"
+require_cmd git
+initramfs_commit="$(git -C "$initramfs_src" rev-parse HEAD)"
+cpio_sha="$(sha256_of "$cpio_src")"
+resource_id="$(make_build_id "$initramfs_commit" "$cpio_sha")"
+resource_dir="$SHARED_DIR/resources/initramfs/$resource_id"
+cpio="$resource_dir/initramfs.cpio"
+if [ ! -f "$cpio" ]; then
+    mkdir -p "$resource_dir"
+    cp -f "$cpio_src" "$cpio"
+    {
+        echo "component=rhetsim-initramfs"
+        echo "commit=$initramfs_commit"
+        echo "resource_id=$resource_id"
+        echo "sha256=$cpio_sha"
+        echo "mode=prebuilt"
+    } > "$resource_dir/manifest.txt"
+fi
 
 rhetsim_src="${RHETSIM_SRC:-$REPOS_DIR/rhetsim}"
 dtb="$rhetsim_src/platforms/reference/server/riscv-virt.dtb"
@@ -84,11 +88,11 @@ python3 "$ROOT/scripts/lib/write_runtime_manifest.py" \
     --build-id "rhetsim-cli=$(basename "$(dirname "$sim")")" \
     --build-id "fw_jump.bin=$(basename "$(dirname "$fw")")" \
     --build-id "Image=$(basename "$(dirname "$kernel")")" \
-    --build-id "initramfs.cpio=$(basename "$(dirname "$cpio")")" \
+    --build-id "initramfs.cpio=$resource_id" \
     "rhetsim-cli=$ws/bin/rhetsim-cli" \
     "fw_jump.bin=$ws/bin/fw_jump.bin" \
     "Image=$ws/bin/Image" \
     "initramfs.cpio=$ws/bin/initramfs.cpio" \
     "riscv-virt.dtb=$ws/bin/riscv-virt.dtb" >/dev/null
 
-log "instance '$INSTANCE' built (rootfs=$ROOTFS_MODE, link=$LINK_MODE)"
+log "instance '$INSTANCE' built (sim + fw + kernel + prebuilt rootfs)"

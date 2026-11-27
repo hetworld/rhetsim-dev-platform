@@ -4,16 +4,17 @@
 构建交叉工具链、模拟器、固件、内核和 initramfs，运行相互隔离的实例，并为
 `rhetsim-software-dev-platform` 打包 SDK。
 
-> **当前状态：P0 已完成。** 实例生命周期、实例锁、Linux 启动、SDK 打包和软浮点
-> 工具链重建均已验证；模拟器/固件/initramfs/内核的完整流水线仍在验证（P2）。
-> 迁移期间可以用 `./run.sh build <instance> --reuse-existing` 链接现有的 `rhet/`
-> 构建产物。
+> **当前状态：P1 已完成 / P2 进行中。** 默认构建（模拟器 + OpenSBI + Linux +
+> 预构建 rootfs）、实例生命周期、实例锁、SDK 打包和外部 initrd 启动均已验证；
+> 工具链和 rootfs 重建是 `tools/` 下的可选维护工具。迁移期间仍可以用
+> `./run.sh build <instance> --reuse-existing` 链接现有的 `rhet/` 构建产物。
 
 ## 目录
 
 ```text
 env/        声明式环境定义（版本、配置、补丁、实例）
 scripts/    可执行编排（构建、实例、打包、测试）
+tools/      可选维护工具（工具链、initramfs 重建）
 repos/      拉取的组件源码（gitignored；worktree 母体）
 workspace/  实例与构建产物（gitignored）
 sdk/        SDK 契约、示例和消费端脚本
@@ -29,6 +30,7 @@ docs/       架构/构建/SDK/发布文档以及 docs/memory/ 知识库
 ```bash
 ./run.sh check-host
 ./run.sh fetch
+./run.sh verify-lock
 ./run.sh create riscv-virt-2hart
 ./run.sh build riscv-virt-2hart
 ./run.sh start riscv-virt-2hart
@@ -62,16 +64,15 @@ workspace/instances/<name>/
 
 - 实例定义版本化在 `env/instances/<name>/`。
 - 同一实例默认只允许一个 active run（`run/lock`）；不同实例可以并行。
-- 昂贵的构建产物放在 `workspace/shared/`，内容寻址、只读；实例 `bin/` 默认链接过去。
-  根文件系统按输入集最多构建一次，不会因为创建新实例而重建；用
-  `./run.sh build <name> --rootfs prebuilt` 可以直接使用已提交的 `initramfs.cpio`，
-  用 `--copy` 则物化成独立副本。
+- 昂贵的构建产物放在 `workspace/shared/`，内容寻址、只读；实例 `bin/` 默认链接过去，
+  `--copy` 则物化成独立副本。根文件系统是来自 `rhetsim-initramfs` 的**预构建资源**，
+  平台不再构建它；OpenSBI 和 Linux 仍在本地构建，方便调试时模拟器与软件同步。
 - 内核不再内嵌根文件系统。rootfs 作为独立 initrd 通过模拟器的 `--initrd` 加载，
   修改 rootfs 不会触发内核重编。
 
 ## 构建与运行
 
-- `./run.sh build <name>`：构建或链接启动栈。
+- `./run.sh build <name>`：构建 `rhetsim-cli`、OpenSBI 和 Linux，再组装预构建 rootfs。
 - `./run.sh start <name>`：交互式启动模拟器。
 - `./run.sh start <name> --batch`：非交互运行，日志写入
   `workspace/instances/<name>/logs/<run-id>/uart.log`。
@@ -82,9 +83,10 @@ workspace/instances/<name>/
 ## SDK
 
 `./run.sh sdk <name> --version <ver>` 生成 `workspace/dist/rhetsim-sdk-<ver>/`、
-tarball 和校验和。SDK 包含模拟器二进制、固件、
-内核、DTB、initramfs、sysroot/工具链、示例和消费端脚本。参见
-[sdk/layout.md](sdk/layout.md) 和 [docs/sdk-spec.md](docs/sdk-spec.md)。
+tarball 和校验和。SDK 包含模拟器二进制、固件、内核、DTB、initramfs、可选 sysroot、
+示例和消费端脚本。需要 sysroot 时用可选维护工具
+`tools/toolchain/build-toolchain.sh` 构建。参见 [sdk/layout.md](sdk/layout.md) 和
+[docs/sdk-spec.md](docs/sdk-spec.md)。
 
 不要把大二进制提交进 git：通过 GitHub Releases、OCI 镜像或软件平台的下载脚本分发。
 

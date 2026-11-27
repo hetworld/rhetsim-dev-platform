@@ -11,7 +11,7 @@ check_file() { [ -f "$ROOT/$1" ] || { echo "MISSING file: $1"; fail=1; }; }
 
 while IFS= read -r script; do
     bash -n "$script" || { echo "SYNTAX error: ${script#$ROOT/}"; fail=1; }
-done < <(find "$ROOT/scripts" "$ROOT/sdk/scripts" -name '*.sh' -type f; echo "$ROOT/run.sh")
+done < <(find "$ROOT/scripts" "$ROOT/sdk/scripts" "$ROOT/tools" -name '*.sh' -type f; echo "$ROOT/run.sh")
 
 for f in \
     CLAUDE.md Makefile run.sh .gitignore \
@@ -28,7 +28,7 @@ for f in \
     check_file "$f"
 done
 
-if ! python3 "$ROOT/scripts/lib/versions.py" list | grep -q '^rhetsim	'; then
+if ! python3 "$ROOT/scripts/lib/versions.py" list | grep -q '^rhetsim|'; then
     echo "versions.toml: rhetsim component not parsed"
     fail=1
 fi

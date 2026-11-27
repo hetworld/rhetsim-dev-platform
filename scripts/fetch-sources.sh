@@ -11,10 +11,9 @@ require_cmd curl
 require_cmd sha256sum
 require_cmd tar
 
-mkdir -p "$REPOS_DIR" "$REPOS_DIR/downloads" \
-         "$REPOS_DIR/software" "$REPOS_DIR/toolchain"
+mkdir -p "$REPOS_DIR" "$REPOS_DIR/software"
 
-while IFS=$'\t' read -r name type url ref path sha archive strip; do
+while IFS='|' read -r name type url ref path sha archive strip; do
     [ -n "$name" ] || continue
     dest="$REPOS_DIR/$path"
     case "$type" in
@@ -34,6 +33,7 @@ while IFS=$'\t' read -r name type url ref path sha archive strip; do
             ;;
         tar)
             [ -n "$archive" ] || die "$name: missing archive name"
+            mkdir -p "$REPOS_DIR/downloads"
             archive_path="$REPOS_DIR/downloads/$archive"
             if [ ! -f "$archive_path" ]; then
                 log "download $name"

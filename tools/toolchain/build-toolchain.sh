@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Build the rv64ima/lp64 soft-float musl sysroot and soft-fp libgcc.
+# Optional maintainer tool: build the rv64ima/lp64 soft-float musl sysroot and
+# soft-fp libgcc. Not part of ./run.sh build.
+# Requires MUSL_SRC and GCC_SRC (or tools/toolchain/src/{musl,gcc}).
 # Output: workspace/shared/toolchain/<abi-id>/
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=scripts/lib/common.sh
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../../scripts/lib/common.sh
 source "$ROOT/scripts/lib/common.sh"
 
-MUSL_SRC="${MUSL_SRC:-$REPOS_DIR/toolchain/musl}"
-GCC_SRC="${GCC_SRC:-$REPOS_DIR/toolchain/gcc}"
-# shellcheck source=../env/configs/musl/build.conf
-source "$ENV_DIR/configs/musl/build.conf"
+MUSL_SRC="${MUSL_SRC:-$ROOT/tools/toolchain/src/musl}"
+GCC_SRC="${GCC_SRC:-$ROOT/tools/toolchain/src/gcc}"
+# shellcheck source=configs/musl/build.conf
+source "$ROOT/tools/toolchain/configs/musl/build.conf"
 
 require_dir "$MUSL_SRC"
 require_dir "$GCC_SRC"
@@ -53,14 +55,14 @@ distro_libgcc="$(riscv64-linux-gnu-gcc -print-libgcc-file-name)"
 GCC_SRC="$GCC_SRC" \
 DISTRO_LIBGCC="$distro_libgcc" \
 OUT_DIR="$tmp/libgcc-soft" \
-PATCHER="$ROOT/scripts/tools/patch_elf_abi.py" \
-    "$ROOT/scripts/tools/build_softfp_libgcc.sh"
+PATCHER="$ROOT/tools/toolchain/patch_elf_abi.py" \
+    "$ROOT/tools/toolchain/build_softfp_libgcc.sh"
 cp "$tmp/libgcc-soft/libgcc-soft.a" "$tmp/sysroot/lib/libgcc.a"
 
 log "installing musl-gcc specs and wrapper"
 cp "$ENV_DIR/configs/musl/musl-gcc.specs.in" "$tmp/sysroot/lib/musl-gcc.specs.in"
 sed "s|@SYSROOT@|$tmp/sysroot|g" \
-    "$ENV_DIR/configs/musl/musl-gcc.specs.in" > "$tmp/sysroot/lib/musl-gcc.specs"
+    "$ROOT/tools/toolchain/configs/musl/musl-gcc.specs.in" > "$tmp/sysroot/lib/musl-gcc.specs"
 # The wrapper generates a specs file from the template at run time so the
 # sysroot stays relocatable (SDK bundles are extracted at arbitrary paths).
 cat > "$tmp/sysroot/bin/musl-gcc" <<'EOF'

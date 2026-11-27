@@ -4,7 +4,7 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 export ROOT
 
-.PHONY: help check-host fetch create build run sdk test clean
+.PHONY: help check-host fetch verify-lock pin create build run sdk test clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target> [INSTANCE=<name>] [ARGS=\"...\"]\n\nTargets (thin aliases for ./run.sh):\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -14,6 +14,12 @@ check-host: ## Check host build dependencies
 
 fetch: ## Fetch pinned component sources into repos/
 	@./run.sh fetch
+
+verify-lock: ## Verify fetched sources match env/versions.toml
+	@./run.sh verify-lock
+
+pin: ## Pin a component: make pin COMPONENT=<name> REF=<ref|branch>
+	@./run.sh pin $(COMPONENT) $(REF)
 
 create: ## Materialize workspace/instances/$(INSTANCE)
 	@./run.sh create $(INSTANCE)

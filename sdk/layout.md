@@ -15,7 +15,7 @@ rhetsim-sdk-<version>/
 │   └── riscv-virt.dtb
 ├── rootfs/initramfs.cpio  # root filesystem loaded as initrd
 ├── toolchain/
-│   └── sysroot/           # optional rv64ima/lp64 musl sysroot + musl-gcc
+│   └── sysroot/           # optional rv64ima/lp64 musl sysroot (tools/toolchain)
 ├── examples/hello/        # consumer example
 └── scripts/run.sh         # convenience launcher
 ```

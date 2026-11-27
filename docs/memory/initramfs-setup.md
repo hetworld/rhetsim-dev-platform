@@ -24,10 +24,20 @@ DRAM and writes `linux,initrd-start/end` into the DTB `/chosen` node. Changing t
 rootfs does not rebuild the kernel. The embedded-initramfs details above describe the
 historical rhetsim tree.
 
+The rootfs itself is a **prebuilt resource**: the default platform copies
+`rhetsim-initramfs/initramfs.cpio` into `workspace/shared/resources/initramfs/<id>/`
+and does not run BusyBox. Rebuilding it is an optional maintainer tool at
+`tools/initramfs/build-initramfs.sh`.
+
 Verified 2026-11-27: kernel without embedded initramfs + simulator `--initrd` boots
 to `RHETSIM_INIT_OK`; the same kernel without `--initrd` panics with
 `VFS: Unable to mount root fs`. The out-of-tree kernel build requires a clean source
 tree (no in-tree `.config`); use a clean clone or detached worktree.
 
-**Why:** The kernel tree and the soft-float toolchain are outside the main repo, so this state is not recorded there.
-**How to apply:** Rebuild the kernel only with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- ...`; a bare `make` once reconfigured the tree for x86 and had to be restored. For the dev-platform, pass the cpio via `--initrd`; the old embedded setup is historical. See [[softfloat-busybox-toolchain]] for the userland toolchain.
+**Why:** The kernel/rootfs resources and the optional soft-float toolchain used to be
+manual out-of-repo state. The dev-platform now pins the kernel source and consumes a
+prebuilt rootfs, while keeping OpenSBI/Linux buildable for simulator/software sync.
+**How to apply:** keep `CONFIG_INITRAMFS_SOURCE=""` and pass the cpio via `--initrd`;
+the default build consumes the committed cpio. Rebuild the rootfs only with
+`tools/initramfs/build-initramfs.sh`. See [[softfloat-busybox-toolchain]] for the
+optional userland toolchain.

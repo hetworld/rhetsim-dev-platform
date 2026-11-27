@@ -9,12 +9,15 @@ README is tracked.
 - Instance worktrees are created from these canonical clones with
   `git worktree add --detach`.
 
-Layout:
+Default layout:
 
 ```text
 repos/
-├── downloads/                 # source tarballs
 ├── rhetsim/
-├── software/{opensbi,linux,rhetsim-initramfs,busybox}/
-└── toolchain/{musl,gcc}/
+└── software/
+    ├── opensbi/
+    ├── linux/
+    └── rhetsim-initramfs/    # also provides the prebuilt initramfs.cpio
 ```
+
+Optional toolchain/rootfs sources are not fetched here; see `tools/`.

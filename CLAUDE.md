@@ -12,7 +12,9 @@
 ## Directory boundaries
 
 - `env/` — declarative environment definitions: versions, configs, patches, instances.
-- `scripts/` — executable orchestration; all build/run/package logic lives here.
+- `scripts/` — executable orchestration for the default platform build.
+- `tools/` — optional maintainer tooling (toolchain/initramfs rebuilds); not part
+  of `./run.sh build`.
 - `repos/` — fetched component sources and worktree parent (gitignored, never commit).
 - `workspace/` — instances and build artifacts (gitignored, never commit).
 - `sdk/` — SDK layout contract, consumer examples and SDK-side scripts.
@@ -23,6 +25,8 @@
 - Never edit files under `repos/`. Put changes in `env/patches/` or in the instance
   worktree at `workspace/instances/<name>/src/`.
 - Never commit `repos/`, `workspace/`, or `.claude/settings.local.json`.
+- `env/versions.toml` is a lock file: builds only read it. Update pins with
+  `./run.sh pin`, verify fetched sources with `./run.sh verify-lock`.
 - `./run.sh` is the project command entry (`fetch`, `create`, `build`, `start`,
   `sdk`, `test`, ...); `./run.sh start <name>` launches the simulator. `make help`
   lists the thin aliases.

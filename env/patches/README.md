@@ -5,9 +5,8 @@ source before building. Keep them minimal and upstreamable.
 
 Naming: `NNNN-short-description.patch`, applied in lexical order.
 
-- `musl/` — musl and musl-gcc specs changes.
-- `gcc/` — soft-float libgcc changes.
 - `linux/` — kernel changes.
 
+Toolchain/rootfs patches are optional tools under `tools/toolchain/patches/`.
 Instance-specific patches live in `env/instances/<name>/patches/` and are applied
 only to that instance's worktree.

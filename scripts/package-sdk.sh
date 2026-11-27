@@ -73,7 +73,7 @@ if [ "$WITH_TOOLCHAIN" -eq 1 ]; then
         cp -a "$toolchain/sysroot" "$sdk_root/toolchain/sysroot"
     else
         warn "no built toolchain found; SDK will not include a sysroot"
-        echo "No sysroot was bundled. Build one with scripts/build-toolchain.sh." \
+        echo "No sysroot was bundled. Build one with tools/toolchain/build-toolchain.sh." \
             > "$sdk_root/toolchain/README.md"
     fi
 fi

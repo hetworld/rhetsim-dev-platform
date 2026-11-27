@@ -21,13 +21,34 @@ On Ubuntu 22.04 the cross toolchain comes from `gcc-riscv64-linux-gnu` and
 ./run.sh fetch
 ```
 
-This reads `env/versions.toml` and populates `repos/`:
-
-- git components are cloned and checked out at the pinned commit (detached HEAD);
-- tarball components are downloaded, verified against the recorded SHA-256, and
-  extracted.
+This reads `env/versions.toml` and populates `repos/` with the pinned simulator,
+OpenSBI, Linux and initramfs sources. Git components are cloned and checked out at
+the pinned commit (detached HEAD). The lock format also supports tarball resources
+(download + SHA-256 + extract), but the default platform does not use any.
 
 `repos/` is a build cache and a git worktree parent. Do not edit it directly.
+
+## Lock file
+
+`env/versions.toml` is a committed lock file; builds only read it.
+
+- Update a git component pin:
+  ```bash
+  ./run.sh pin <component> <commit-or-branch>
+  ./run.sh pin rhetsim dev --from-local /home/leo/leo/workspace/rhet/rhetsim
+  ```
+  `--from-local` resolves the ref from a checkout (default `HEAD`), which is useful
+  right after committing a component.
+- Update a tarball SHA-256 (when a resource component uses a tarball):
+  ```bash
+  ./run.sh pin <component> --file <archive>
+  ```
+- Verify the fetched sources against the lock:
+  ```bash
+  ./run.sh verify-lock
+  ```
+  It checks git HEAD/commit/clean state and tarball checksums. Run it in CI after
+  `fetch`.
 
 ## Instance lifecycle
 
@@ -60,24 +81,21 @@ This reads `env/versions.toml` and populates `repos/`:
 ## Shared artifacts and the root filesystem
 
 `./run.sh create` never builds anything; it only materializes config and optional
-worktrees. `./run.sh build` computes a content-addressed build ID for each stage
-and reuses `workspace/shared/build/` across instances:
+worktrees. `./run.sh build` builds the simulator, OpenSBI and Linux, reusing
+content-addressed artifacts under `workspace/shared/build/`, then assembles the
+prebuilt rootfs:
 
 - Instance `bin/` entries are symlinks into the shared cache by default. Use
   `--copy` to materialize independent copies for a self-contained instance.
-- The root filesystem is built **at most once** per (initramfs commit, BusyBox
-  config, toolchain) input set. It is not rebuilt when a new instance is created.
-- `--rootfs prebuilt` uses the `initramfs.cpio` committed in
-  `rhetsim-initramfs`, skipping BusyBox entirely:
-
-  ```bash
-  ./run.sh build riscv-virt-2hart --rootfs prebuilt
-  ```
-
+- The root filesystem is a **prebuilt resource** from `rhetsim-initramfs`
+  (`initramfs.cpio` at the pinned commit). The default build does not run BusyBox
+  or `gen_init_cpio`; rebuilds are optional maintainer tools under `tools/initramfs/`.
+- The rootfs is copied into `workspace/shared/resources/initramfs/<id>/` so every
+  instance with the same input shares it.
 - The kernel is built **without** an embedded initramfs. The rootfs is an external
   initrd: `instance-run.sh` passes `--initrd`, and the simulator writes
-  `linux,initrd-start/end` into the DTB `/chosen` node. Changing the rootfs no
-  longer rebuilds the kernel; the kernel and rootfs are independent artifacts.
+  `linux,initrd-start/end` into the DTB `/chosen` node. Changing the rootfs does not
+  rebuild the kernel; the kernel and rootfs are independent artifacts.
 - `./run.sh export` dereferences the symlinks, so an exported instance is
   self-contained.
 
@@ -85,24 +103,30 @@ and reuses `workspace/shared/build/` across instances:
 
 `scripts/build-all.sh --instance <name>` runs, in order:
 
-1. `build-toolchain.sh` — musl 1.2.5 for `rv64ima`/`lp64`, patched musl-gcc specs,
-   soft-float `libgcc.a` merged from GCC's soft-fp sources.
-2. `build-simulator.sh` — `cargo build --release --bin rhetsim-cli`.
-3. `build-firmware.sh` — OpenSBI `fw_jump.bin` for `generic`/RV64.
-4. `build-initramfs.sh` — BusyBox + `init.sh` packed with `gen_init_cpio`.
-5. `build-kernel.sh` — Linux 6.1 with the instance config, no embedded initramfs.
+1. `build-simulator.sh` — `cargo build --release --bin rhetsim-cli`.
+2. `build-firmware.sh` — OpenSBI `fw_jump.bin` for `generic`/RV64.
+3. `build-kernel.sh` — Linux 6.1 with the instance config, no embedded initramfs.
+4. Rootfs — copy the pinned/prebuilt `initramfs.cpio` from `rhetsim-initramfs`
+   into the shared resource cache; no BusyBox build.
 
-Every stage is cached by a build ID derived from its inputs. Re-running is cheap
-unless a pinned commit, config, patch or toolchain changed.
+Every build stage is cached by a build ID derived from its inputs. Re-running is
+cheap unless a pinned commit or config changed.
+
+Optional maintainer tools (not part of `./run.sh build`):
+
+- `tools/toolchain/build-toolchain.sh` — soft-float musl sysroot (for an SDK that
+  should carry a toolchain).
+- `tools/initramfs/build-initramfs.sh` — rebuild BusyBox/initramfs from source.
 
 ## Important details
 
 - The CPU is `rv64ima` (no F/D), so user space must use the `lp64` soft-float ABI.
   A distro `riscv64-linux-gnu` toolchain defaults to `lp64d` and will fault.
   Always use the sysroot's `musl-gcc` for target programs.
-- musl is installed static-only (`make install SHARED_LIBS=`); the sysroot has no
-  `libc.so`, matching the static user space. `musl-gcc` generates its specs file
-  from `lib/musl-gcc.specs.in` at run time, so sysroots and SDKs are relocatable.
+- The optional sysroot built by `tools/toolchain/` is static-only
+  (`make install SHARED_LIBS=`); it has no `libc.so`, matching the static user
+  space. `musl-gcc` generates its specs file from `lib/musl-gcc.specs.in` at run
+  time, so sysroots and SDKs are relocatable.
 - The kernel is built **without** an embedded initramfs. `CONFIG_INITRAMFS_SOURCE`
   stays empty; `instance-run.sh` passes the rootfs via `--initrd`, and the simulator
   writes `linux,initrd-start/end` into the DTB `/chosen` node.

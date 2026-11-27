@@ -37,7 +37,7 @@ def main() -> int:
     components = load(Path(ns.file))
     if ns.action == "list":
         for name, comp in components.items():
-            print("\t".join([
+            print("|".join([
                 name,
                 comp.get("type", ""),
                 comp.get("url", ""),

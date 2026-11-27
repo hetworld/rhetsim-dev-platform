@@ -15,11 +15,13 @@ RhetSim's CPU is rv64ima (no F/D), so userspace needs the lp64 soft-float ABI. B
 - `sysroot/lib/libgcc.a`: merged archive built by `softfloat/tools/build_softfp_libgcc.sh`. Ubuntu's `libgcc.a` is compiled for rv64gc/lp64d: its objects get e_flags float-ABI cleared (`tools/patch_elf_abi.py`) and its TF helpers are replaced by soft-fp objects compiled from `gcc-11.4.0/libgcc/soft-fp`. The distro libgcc has **no** SF/DF helpers at all (hardware F/D assumed), hence the soft-fp build.
 - `busybox/busybox-1.36.1`: built static via `/home/leo/leo/workspace/rhet/rhetsim-initramfs/build-busybox.sh`.
 
-The initramfs repo (`../rhetsim-initramfs`) now uses `init.sh` + static `busybox`; `build.sh` only regenerates the cpio (requires `busybox` present). Kernel must be rebuilt with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-` after changing the cpio. Backup: `/home/leo/leo/workspace/rhet/linux-6.1/arch/riscv/boot/Image.before-busybox`.
+The initramfs repo (`../rhetsim-initramfs`) now uses `init.sh` + static `busybox`; `build.sh` only regenerates the cpio (requires `busybox` present). The historical embedded setup required a kernel rebuild after changing the cpio; the dev-platform now uses an external initrd, so a rootfs change does not rebuild the kernel. Backup: `/home/leo/leo/workspace/rhet/linux-6.1/arch/riscv/boot/Image.before-busybox`.
 
-## dev-platform rebuild (2026-11-26)
+## dev-platform toolchain (optional, 2026-11-27)
 
-`rhetsim-dev-platform` now rebuilds this toolchain with `scripts/build-toolchain.sh`:
+The dev-platform keeps this toolchain as an **optional maintainer tool** at
+`tools/toolchain/build-toolchain.sh`; `./run.sh build` does not build it. The
+default platform consumes the prebuilt rootfs and builds simulator + OpenSBI + Linux.
 
 - musl is installed **static-only** (`make lib/libc.a`, `make install SHARED_LIBS=`)
   because linking `libc.so` needs the soft-float libgcc that does not exist yet.
@@ -34,8 +36,9 @@ The initramfs repo (`../rhetsim-initramfs`) now uses `init.sh` + static `busybox
   SDK to `RHETSIM_INIT_OK`.
 
 **Why:** recreating this toolchain is non-obvious (patched specs, ABI flags, soft-fp
-merge) and it used to be manual out-of-repo state. The dev-platform now owns the
-script and configs, and the static-only/relocatable details are easy to get wrong.
-**How to apply:** use `./run.sh build` (or `scripts/build-toolchain.sh`); do not swap
-in a standard riscv64 glibc/musl toolchain, which is lp64d and faults on this CPU.
+merge) and it used to be manual out-of-repo state. Keeping it as a tool keeps the
+default platform focused on simulator/OpenSBI/Linux development.
+**How to apply:** run `tools/toolchain/build-toolchain.sh` with `MUSL_SRC`/`GCC_SRC`
+when you need a sysroot (for example to ship one in the SDK). Do not swap in a
+standard riscv64 glibc/musl toolchain, which is lp64d and faults on this CPU.
 See [[initramfs-setup]], [[dev-platform-layout]].

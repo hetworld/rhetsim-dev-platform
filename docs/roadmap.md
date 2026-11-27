@@ -3,39 +3,45 @@
 | Phase | Status | Goal |
 |---|---|---|
 | P0 | Done | Repository skeleton, instance model, scripts, Claude assets, reuse-existing boot path |
-| P1 | In progress | Fetch + version lock + full toolchain rebuild reproducibility |
-| P2 | Planned | Reproducible simulator/firmware/initramfs/kernel builds through the cache |
+| P1 | Done | Fetch + version lock + optional toolchain/rootfs tooling |
+| P2 | In progress | Reproducible simulator/OpenSBI/Linux build + prebuilt rootfs |
 | P3 | Planned | SDK packaging, consumer example, consumer-side CI |
 | P4 | Planned | Release automation, OCI image, sandboxed/parallel instance runs |
 
 ## P0 — skeleton (done)
 
-- Final directory layout: `env/`, `scripts/`, `repos/`, `workspace/`, `sdk/`, `docs/`.
+- Final directory layout: `env/`, `scripts/`, `tools/`, `repos/`, `workspace/`,
+  `sdk/`, `docs/`.
 - `./run.sh` project command entry (`fetch/create/build/start/sdk/test/...`) with
   thin `make` aliases.
 - Instance definition + materialization + per-instance run lock and run IDs.
 - Bootstrap via an existing `rhet/` tree (`./run.sh build <instance> --reuse-existing`).
 - Project skills, memory base and commit rules committed with the repository.
 - Verified: Linux boot to `RHETSIM_INIT_OK`, per-instance lock, SDK package +
-  consumer compile, SDK boot, soft-float toolchain rebuild with a relocatable
-  sysroot, shared artifact links, `--rootfs prebuilt` (committed cpio, no BusyBox
-  rebuild, cached on the second run), and an external-initrd boot with a kernel
-  that has no embedded initramfs (no-initrd control panics with "unable to mount
-  root fs").
+  consumer compile, SDK boot, shared artifact links, a prebuilt rootfs resource from
+  `rhetsim-initramfs`, and an external-initrd boot with a kernel that has no embedded
+  initramfs (no-initrd control panics with "unable to mount root fs").
 
-## P1 — sources and toolchain
+## P1 — sources and lock
 
-- [x] Rebuild musl + soft-float libgcc from scratch (`scripts/build-toolchain.sh`);
-  the static-only sysroot and relocatable `musl-gcc` are verified (example compile,
-  relocated sysroot/SDK compile, SDK boot).
-- [ ] Validate `fetch-sources.sh` end to end for all git/tarball components.
-- [ ] Replace any remaining manual out-of-repo state with `env/configs` + `env/patches`.
+- [x] Lock file (`env/versions.toml`) with `./run.sh pin` and `./run.sh verify-lock`;
+  builds never rewrite the lock.
+- [x] Optional toolchain rebuild moved to `tools/toolchain/`; the static-only
+  sysroot and relocatable `musl-gcc` are verified (example compile, relocated
+  sysroot/SDK compile, SDK boot).
+- [x] Validate `fetch-sources.sh` + `verify-lock` end to end for the 4 pinned git
+  components.
+- [x] Default platform has no manual out-of-repo build state; toolchain and rootfs
+  rebuilds are documented optional tools.
 
-## P2 — full build
+## P2 — default build
 
-- Make every `build-*.sh` stage reproducible and cached by content hash.
+- Default build: simulator + OpenSBI + Linux + prebuilt rootfs resource.
+- Keep each build stage reproducible and cached by content hash.
 - Add instance-specific patches and worktree builds.
-- Verify `build-all.sh` boots Linux without `--reuse-existing`.
+- [x] Verified 2026-11-27: `fetch` + `verify-lock` (4 components) → lean `build-all`
+  (sim + OpenSBI + Linux + prebuilt rootfs) → instance boot and SDK boot both reach
+  `RHETSIM_INIT_OK`.
 
 ## P3 — SDK and consumer
 
