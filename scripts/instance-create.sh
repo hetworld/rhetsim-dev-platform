@@ -62,6 +62,10 @@ for comp in "${WORKTREES[@]}"; do
         log "worktree already present: $rel"
     else
         mkdir -p "$(dirname "$dest")"
+        # A cached repos/ tree can carry worktree registrations from a
+        # previous runner whose absolute paths no longer exist; git then
+        # refuses to add the new worktree. Prune the stale entries first.
+        git -C "$repo" worktree prune
         git -C "$repo" worktree add --detach "$dest" "$ref"
         log "worktree $comp at $ref -> $rel"
     fi
