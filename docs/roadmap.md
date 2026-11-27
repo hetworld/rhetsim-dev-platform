@@ -43,7 +43,8 @@
 - Keep each build stage reproducible and cached by content hash.
 - [x] Simulator development uses `workspace/instances/<name>/src/rhetsim`; `build-all`
   prefers it and `./run.sh test sim` runs the workspace tests.
-- [ ] Add instance-specific patches.
+- [x] Add global/instance component patches; applied in a temporary worktree and
+  included in the component build ID.
 - [x] Verified 2026-11-27: `fetch` + `verify-lock` (4 components) → lean `build-all`
   (sim + OpenSBI + Linux + prebuilt rootfs) → instance boot and SDK boot both reach
   `RHETSIM_INIT_OK`.

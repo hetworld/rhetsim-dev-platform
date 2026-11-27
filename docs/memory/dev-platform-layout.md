@@ -42,6 +42,9 @@ Rules:
 - Simulator development uses `workspace/instances/<name>/src/rhetsim`; `build-all`
   prefers it and `./run.sh test sim` runs the workspace tests. Current focus is
   simulator development/validation; SDK/release is planned.
+- Component patches: global `env/patches/<component>/`, instance
+  `env/instances/<name>/patches/<component>/`; applied in a temporary git worktree
+  at the pinned commit and hashed into the component build ID. `repos/` stays clean.
 - One active run per instance is enforced with `run/lock` (`flock`).
 - Never commit `repos/`, `workspace/`, or `.claude/settings.local.json`.
 - `env/versions.toml` is a committed lock file: builds only read it. Update pins

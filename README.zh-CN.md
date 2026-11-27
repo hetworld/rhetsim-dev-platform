@@ -85,6 +85,8 @@ workspace/instances/<name>/
   `cargo test --workspace`。
 - `./run.sh bench --runs 3`：测量 Linux 启动耗时并打印 JIT 统计；`--no-jit`
   可跑解释器基线。
+- 实例级组件补丁放在 `env/instances/<name>/patches/<component>/`；构建时在临时
+  worktree 中应用，并计入组件 build ID。
 
 详见 [docs/build.md](docs/build.md)、[docs/architecture.md](docs/architecture.md)。
 

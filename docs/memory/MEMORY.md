@@ -6,5 +6,5 @@
 - [Initramfs setup](initramfs-setup.md) — BusyBox init.sh source path and kernel config/backup state
 - [Soft-float BusyBox toolchain](softfloat-busybox-toolchain.md) — rv64ima lp64 musl sysroot, patched specs/libgcc, build script
 - [Dev-platform architecture](dev-platform-architecture.md) — planned dev-platform vs software-dev-platform split, decisions, open questions
-- [Dev-platform layout](dev-platform-layout.md) — final repo layout, instance model and build conventions
+- [Dev-platform layout](dev-platform-layout.md) — final repo layout, instance model, patch layering and build conventions
 - [JIT performance tuning](jit-perf-tuning.md) — 78.1s→23.6s boot stats, commit 68efa75, failed inlining experiment

@@ -6,17 +6,22 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/lib/common.sh
 source "$ROOT/scripts/lib/common.sh"
+# shellcheck source=scripts/lib/patches.sh
+source "$ROOT/scripts/lib/patches.sh"
 
 CONFIG="$ENV_DIR/configs/linux/rv64ima_defconfig"
 FRAGMENTS=()
+PATCH_DIRS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --config) CONFIG="$2"; shift 2 ;;
         --config=*) CONFIG="${1#*=}"; shift ;;
         --fragment) FRAGMENTS+=("$2"); shift 2 ;;
         --fragment=*) FRAGMENTS+=("${1#*=}"); shift ;;
+        --patch-dir) PATCH_DIRS+=("$2"); shift 2 ;;
+        --patch-dir=*) PATCH_DIRS+=("${1#*=}"); shift ;;
         --help|-h)
-            echo "usage: $0 [--config FILE] [--fragment FILE ...]"
+            echo "usage: $0 [--config FILE] [--fragment FILE ...] [--patch-dir DIR ...]"
             echo "  The kernel is built without an embedded initramfs; pass the rootfs at boot."
             exit 0
             ;;
@@ -38,7 +43,12 @@ frag_sig=""
 for f in "${FRAGMENTS[@]}"; do
     frag_sig+="$(sha256_of "$f")"
 done
-build_id="$(make_build_id "$commit" "$(sha256_of "$CONFIG")" "$frag_sig" "$(riscv64-linux-gnu-gcc --version | head -n1)")"
+patch_sig="$(patch_signature "${PATCH_DIRS[@]}")"
+if [ "$patch_sig" = "none" ]; then
+    build_id="$(make_build_id "$commit" "$(sha256_of "$CONFIG")" "$frag_sig" "$(riscv64-linux-gnu-gcc --version | head -n1)")"
+else
+    build_id="$(make_build_id "$commit" "$(sha256_of "$CONFIG")" "$frag_sig" "$(riscv64-linux-gnu-gcc --version | head -n1)" "$patch_sig")"
+fi
 out="$SHARED_DIR/build/linux/$build_id"
 artifact="$out/Image"
 
@@ -48,6 +58,8 @@ if [ -f "$artifact" ]; then
     exit 0
 fi
 
+prepare_patched_source linux "$LINUX_SRC" "$commit" "${PATCH_DIRS[@]}"
+build_src="$PATCHED_SOURCE"
 log "building Linux without embedded initramfs ($build_id)"
 mkdir -p "$out/build"
 if [ ${#FRAGMENTS[@]} -eq 0 ]; then
@@ -56,7 +68,7 @@ else
     # Merge fragments instead of appending them: appending duplicates symbols
     # already present in the full defconfig, which makes olddefconfig print
     # "override: reassigning to symbol ..." warnings.
-    merge_tool="$LINUX_SRC/scripts/kconfig/merge_config.sh"
+    merge_tool="$build_src/scripts/kconfig/merge_config.sh"
     require_file "$merge_tool"
     config_abs="$(readlink -f -- "$CONFIG")"
     fragments_abs=()
@@ -71,8 +83,8 @@ else
     fi
 fi
 
-make -C "$LINUX_SRC" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- olddefconfig
-make -C "$LINUX_SRC" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j"$(nproc)"
+make -C "$build_src" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- olddefconfig
+make -C "$build_src" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j"$(nproc)"
 
 cp "$out/build/arch/riscv/boot/Image" "$artifact"
 cp "$out/build/.config" "$out/kernel.config"
@@ -80,6 +92,7 @@ cp "$out/build/.config" "$out/kernel.config"
     echo "component=linux"
     echo "commit=$commit"
     echo "build_id=$build_id"
+    echo "patches=$patch_sig"
     echo "config=$CONFIG"
     echo "initramfs=external"
 } > "$out/manifest.txt"

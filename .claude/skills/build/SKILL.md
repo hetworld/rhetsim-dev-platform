@@ -64,4 +64,6 @@ Failure points to check first:
 - Toolchain (optional): musl configured for `-march=rv64ima -mabi=lp64`; `musl-gcc`
   specs point at the soft-float `libgcc.a`.
 
-Never edit `repos/`. Put changes in `env/patches/` or an instance worktree.
+Never edit `repos/`. Put changes in `env/patches/<component>/` (global),
+`env/instances/<name>/patches/<component>/` (instance), or an instance worktree.
+Patches build in a temporary worktree and are part of the component build ID.

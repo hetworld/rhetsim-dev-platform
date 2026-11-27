@@ -128,7 +128,27 @@ prebuilt rootfs:
    into the shared resource cache; no BusyBox build.
 
 Every build stage is cached by a build ID derived from its inputs. Re-running is
-cheap unless a pinned commit or config changed.
+cheap unless a pinned commit, config or patch changed.
+
+## Patches
+
+Component patches are applied without touching `repos/`:
+
+- Global patches: `env/patches/<component>/*.patch` (all instances).
+- Instance patches: `env/instances/<name>/patches/<component>/*.patch` (one
+  instance).
+
+`<component>` is `rhetsim`, `opensbi` or `linux`. Patches are named
+`NNNN-short-description.patch` and applied in lexical order, global layer first.
+The build scripts create a temporary git worktree at the pinned commit, apply
+the patches there, build, and remove the worktree. The ordered patch set is
+included in the component build ID, so only that component rebuilds when a patch
+changes.
+
+Patches cannot be combined with uncommitted tracked changes in the component
+source worktree; commit or stash them first. Instance patches are copied into
+`workspace/instances/<name>/config/patches/` by `./run.sh create`/`update` and
+refreshed from the definition by `./run.sh update`.
 
 Optional maintainer tools (not part of `./run.sh build`):
 

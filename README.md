@@ -94,6 +94,9 @@ workspace/instances/<name>/
   `src/rhetsim` worktree.
 - `./run.sh bench --runs 3` measures the Linux boot wall time and prints JIT
   counters; pass `--no-jit` for an interpreter baseline.
+- Instance-specific component patches go under
+  `env/instances/<name>/patches/<component>/`; they are applied in a temporary
+  worktree and included in the component build ID.
 
 Details: [docs/build.md](docs/build.md), [docs/architecture.md](docs/architecture.md).
 

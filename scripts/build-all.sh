@@ -42,12 +42,16 @@ if [ -z "$rhetsim_src" ]; then
 fi
 export RHETSIM_SRC="$rhetsim_src"
 
-sim="$("$ROOT/scripts/build-simulator.sh" | tail -n1)"
-fw="$("$ROOT/scripts/build-firmware.sh" | tail -n1)"
+sim_patches=(--patch-dir "$ENV_DIR/patches/rhetsim" --patch-dir "$ws/config/patches/rhetsim")
+fw_patches=(--patch-dir "$ENV_DIR/patches/opensbi" --patch-dir "$ws/config/patches/opensbi")
+linux_patches=(--patch-dir "$ENV_DIR/patches/linux" --patch-dir "$ws/config/patches/linux")
+sim="$("$ROOT/scripts/build-simulator.sh" "${sim_patches[@]}" | tail -n1)"
+fw="$("$ROOT/scripts/build-firmware.sh" "${fw_patches[@]}" | tail -n1)"
 kernel="$("$ROOT/scripts/build-kernel.sh" \
     --fragment "$ENV_DIR/configs/linux/fragments/smp-2hart.config" \
     --fragment "$ENV_DIR/configs/linux/fragments/initramfs.config" \
-    --fragment "$ws/config/kernel.fragment" | tail -n1)"
+    --fragment "$ws/config/kernel.fragment" \
+    "${linux_patches[@]}" | tail -n1)"
 
 # Root filesystem: pinned/prebuilt resource from rhetsim-initramfs.
 initramfs_src="${INITRAMFS_SRC:-$REPOS_DIR/software/rhetsim-initramfs}"
