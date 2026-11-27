@@ -35,9 +35,13 @@ Rules:
 - Do not stack a new feature on an unmerged feature branch. If work depends on
   another task, merge that task into `dev` first, then branch again from `dev`.
 - Small fixes may go directly on `dev`; large or risky changes use a branch.
-- Push the task branch and open a PR against `dev`, not `main`.
-- CI must run pull-request checks for `dev` as well as `main`.
-- After merge, delete the feature branch.
+- When a task branch is complete, merge it into the local `dev` branch
+  (fast-forward when possible, otherwise a regular merge commit). Do not push
+  the task branch or open a per-task PR unless the user asks for one.
+- Local `dev`/`main` are pushed together later, when the user asks to publish.
+- CI runs pull-request checks for `dev` as well as `main` when PRs are used.
+- Keep the task branch after merging it into local `dev`; do not delete task
+  branches (local or remote) unless the user asks.
 
 ## Commit and pin rules
 
@@ -49,6 +53,7 @@ Rules:
 
 - Do not add `Co-Authored-By` lines or any AI attribution.
 - Never commit `repos/`, `workspace/`, or `.claude/settings.local.json`.
-- After a rhetsim change lands on `dev`, update the dev-platform pin with
+- After a rhetsim change lands on the local `dev` (or when the batch is about
+  to be pushed), update the dev-platform pin with
   `./run.sh pin rhetsim <commit>` and keep `env/versions.toml`'s `branch = "dev"`.
 - Run the format/validation checks before committing; see the `build` skill.
