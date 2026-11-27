@@ -87,6 +87,7 @@ Simulator validation:
 ./run.sh test boot riscv-virt-2hart -- --no-jit # boot test with simulator flags
 ./run.sh test boot-matrix riscv-virt-2hart     # custom, U74, C908 base/full
 ./run.sh test isa riscv-virt-2hart             # riscv-tests through JIT + interpreter
+./run.sh test difftest riscv-virt-2hart        # instruction-level diff against Spike
 ./run.sh bench --runs 3                        # boot wall time + JIT counters
 ```
 
@@ -102,6 +103,18 @@ interpreter. The covered groups are `rv64ui/uc/um/ua/uf/ud`, `rv64uzba/zbb/zbc/z
 `KNOWN_FP_GAPS` in `components/cpu/rhetsim-cpu-riscv/tests/isa_compliance.rs`
 is an empty escape hatch for future documented gaps; a listed test that starts
 passing fails the run so the list cannot go stale.
+
+`test difftest` builds a pinned Spike into `workspace/shared/spike/<ref>/`
+(commit logging is built in), reuses the p-test ELFs from `test isa`, and
+replays each test in the interpreter one instruction at a time. For every
+retired instruction it compares the privilege level, PC, raw instruction,
+integer/FP register writes and `fflags`/`frm`/`fcsr` writes against Spike's
+`--log-commits` output; instructions that trap are absent from Spike's log and
+are consumed separately. 167 of the 171 p-tests match instruction by
+instruction. Four documented skips cover implementation-defined differences:
+Spike lacks Sdtrig triggers, stores the instruction word in `mtval` for illegal
+instructions, honours writes that clear bits in `misa`, and its `time` CSR does
+not advance in the default configuration.
 
 `test boot-matrix` boots every CPU profile (`custom`, `u74`, `c908`,
 `c908-full`) with the reference manifest/DTB from the simulator source tree and

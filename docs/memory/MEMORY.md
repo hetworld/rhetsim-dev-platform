@@ -8,3 +8,5 @@
 - [Dev-platform architecture](dev-platform-architecture.md) — planned dev-platform vs software-dev-platform split, decisions, open questions
 - [Dev-platform layout](dev-platform-layout.md) — final repo layout, instance model, patch layering and build conventions
 - [JIT performance tuning](jit-perf-tuning.md) — 78.1s→23.6s boot stats, commit 68efa75, failed inlining experiment
+- [Spike difftest](spike-difftest.md) — p-test trace comparison, ISA string and skip reasons
+- [Current plan](current-plan.md) — 2026-11-27 state and next P2/P3/M4/M5 work

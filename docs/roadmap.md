@@ -85,7 +85,12 @@
   output, NaN boxing, `fcsr` rounding modes and the integer conversions are
   modelled in the interpreter and JIT; all 171 riscv-tests pass in both
   engines. (RMM ties and non-RNE int->FP rounding remain approximated.)
-- [ ] QEMU/Spike instruction-trace difftest (riscv-arch-test integration).
+- [x] Spike instruction-level difftest (`./run.sh test difftest`): the
+  interpreter replays every riscv-tests p-test and compares PC, privilege,
+  raw instruction, integer/FP register writes and FP-CSR writes against
+  Spike's commit log. 167/171 match; four implementation-defined differences
+  are documented skips.
+- [ ] riscv-arch-test integration and a QEMU cross-check.
 - [ ] **M4** — finalize the custom simulator CPU profile after U74/C908 work:
   stable ISA subset, profile name, default-platform wiring and documentation.
 - [ ] **M5** — SoC / Board / Machine topology (last task):
