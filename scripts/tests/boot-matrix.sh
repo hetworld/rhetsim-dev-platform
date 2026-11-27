@@ -54,6 +54,10 @@ sim_src="$ws/src/rhetsim"
 golden_dir="$ENV_DIR/configs/golden/boot"
 mkdir -p "$golden_dir"
 
+annotate_error() {
+    printf '::error::%s\n' "$*"
+}
+
 profile_manifest() {
     case "$1" in
         custom) printf '%s/config/platform.toml' "$ws" ;;
@@ -69,7 +73,8 @@ profile_dtb() {
 }
 
 check_markers() {
-    local log="$1"
+    local profile="$1"
+    local log="$2"
     local missing=0 marker
     for marker in \
         "Linux version" \
@@ -81,6 +86,7 @@ check_markers() {
         "RISC-V INTC"; do
         if ! grep -aq -- "$marker" "$log"; then
             warn "  missing marker: $marker"
+            annotate_error "profile $profile: missing marker '$marker'"
             missing=1
         fi
     done
@@ -99,12 +105,12 @@ check_interrupts() {
         phase && /RISC-V INTC/ { intc[phase] += $2 + $3 }
         /CPU0 +CPU1/ { smp = 1 }
         END {
-            if (!smp) { print "interrupts: missing CPU0/CPU1 header"; exit 1 }
+            if (!smp) { print "::error::interrupts: missing CPU0/CPU1 header"; exit 1 }
             if (plic[1] <= 0 || plic[2] < plic[1]) {
-                print "interrupts: PLIC counts did not increase"; exit 1
+                print "::error::interrupts: PLIC counts did not increase"; exit 1
             }
             if (intc[1] <= 0 || intc[2] < intc[1]) {
-                print "interrupts: RISC-V INTC counts did not increase"; exit 1
+                print "::error::interrupts: RISC-V INTC counts did not increase"; exit 1
             }
         }
     ' "$log"
@@ -130,10 +136,12 @@ check_golden() {
     fi
     if [ ! -f "$golden" ]; then
         warn "  missing golden: ${golden#$ROOT/} (run with --update-golden)"
+        annotate_error "profile $profile: missing golden ${golden#$ROOT/}"
         return 1
     fi
     if ! diff -u "$golden" <(printf '%s\n' "$actual"); then
         warn "  boot signature differs from golden: ${golden#$ROOT/}"
+        annotate_error "profile $profile: boot signature differs from golden"
         return 1
     fi
 }
@@ -145,10 +153,12 @@ run_profile() {
     dtb="$(profile_dtb "$profile")"
     if [ ! -f "$manifest" ]; then
         warn "  missing manifest: $manifest"
+        annotate_error "profile $profile: missing manifest $manifest"
         return 1
     fi
     if [ ! -f "$dtb" ]; then
         warn "  missing DTB: $dtb"
+        annotate_error "profile $profile: missing DTB $dtb"
         return 1
     fi
 
@@ -166,13 +176,14 @@ run_profile() {
     logfile="$ws/logs/$run_id/uart.log"
     if [ ! -f "$logfile" ]; then
         warn "  no UART log at $logfile"
+        annotate_error "profile $profile: no UART log at $logfile"
         return 1
     fi
     if [ "$rc" -ne 0 ]; then
         warn "  simulator exit code $rc"
         ok=1
     fi
-    check_markers "$logfile" || ok=1
+    check_markers "$profile" "$logfile" || ok=1
     check_interrupts "$logfile" || ok=1
     check_golden "$profile" "$logfile" || ok=1
 
@@ -180,6 +191,7 @@ run_profile() {
         log "  profile '$profile' passed (uart: ${logfile#$ROOT/})"
     else
         warn "  profile '$profile' FAILED (uart: ${logfile#$ROOT/})"
+        annotate_error "profile $profile failed (uart: ${logfile#$ROOT/})"
     fi
     return "$ok"
 }
@@ -210,6 +222,7 @@ run_shell_check() {
     until grep -aq 'RHETSIM_INIT_OK' "$uartlog" 2>/dev/null; do
         if [ "$SECONDS" -ge "$deadline" ] || ! kill -0 "$pid" 2>/dev/null; then
             warn "  shell check: INIT_OK not reached"
+            annotate_error "profile $profile: shell check did not reach INIT_OK"
             exec 7>&-
             kill -TERM -"$pid" 2>/dev/null || true
             rm -rf "$tmpdir"
@@ -220,20 +233,32 @@ run_shell_check() {
 
     # Give `exec setsid -c /bin/sh -i` a moment to attach the controlling
     # terminal; input written in that window is echoed but never executed.
-    sleep 2
-    printf 'echo RHETSIM_SHELL_OK\ncat /proc/cpuinfo | grep -i "^isa"\necho RHETSIM_SHELL_DONE\n' >&7
-
-    deadline=$((SECONDS + 60))
-    until grep -aq 'RHETSIM_SHELL_DONE' "$uartlog" 2>/dev/null; do
-        if [ "$SECONDS" -ge "$deadline" ] || ! kill -0 "$pid" 2>/dev/null; then
-            warn "  shell check: commands did not complete"
-            exec 7>&-
-            kill -TERM -"$pid" 2>/dev/null || true
-            rm -rf "$tmpdir"
-            return 1
+    sleep 3
+    done_marker=0
+    for _attempt in 1 2 3; do
+        printf 'echo RHETSIM_SHELL_OK\ncat /proc/cpuinfo | grep -i "^isa"\necho RHETSIM_SHELL_DONE\n' >&7
+        deadline=$((SECONDS + 40))
+        until grep -aq 'RHETSIM_SHELL_DONE' "$uartlog" 2>/dev/null; do
+            if [ "$SECONDS" -ge "$deadline" ] || ! kill -0 "$pid" 2>/dev/null; then
+                break
+            fi
+            sleep 0.5
+        done
+        if grep -aq 'RHETSIM_SHELL_DONE' "$uartlog" 2>/dev/null; then
+            done_marker=1
+            break
         fi
-        sleep 0.5
     done
+    if [ "$done_marker" -ne 1 ]; then
+        warn "  shell check: commands did not complete"
+        annotate_error "profile $profile: shell commands did not complete"
+        exec 7>&-
+        kill -TERM -"$pid" 2>/dev/null || true
+        mkdir -p "$ws/logs/$run_id"
+        cp "$uartlog" "$ws/logs/$run_id/uart.log" 2>/dev/null || true
+        rm -rf "$tmpdir"
+        return 1
+    fi
 
     exec 7>&-
     kill -TERM -"$pid" 2>/dev/null || true
@@ -241,11 +266,17 @@ run_shell_check() {
 
     if ! grep -aq 'RHETSIM_SHELL_OK' "$uartlog"; then
         warn "  shell check: RHETSIM_SHELL_OK missing"
+        annotate_error "profile $profile: RHETSIM_SHELL_OK missing"
+        mkdir -p "$ws/logs/$run_id"
+        cp "$uartlog" "$ws/logs/$run_id/uart.log" 2>/dev/null || true
         rm -rf "$tmpdir"
         return 1
     fi
     if ! grep -aq 'isa.*rv64' "$uartlog"; then
         warn "  shell check: no isa line from /proc/cpuinfo"
+        annotate_error "profile $profile: no isa line from /proc/cpuinfo"
+        mkdir -p "$ws/logs/$run_id"
+        cp "$uartlog" "$ws/logs/$run_id/uart.log" 2>/dev/null || true
         rm -rf "$tmpdir"
         return 1
     fi
