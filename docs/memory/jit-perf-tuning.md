@@ -20,6 +20,10 @@ Boot-to-init benchmark (kernel Image #7 with BusyBox initramfs, 2 harts, ~134M s
 
 Diagnosis came from new stats (`RHETSIM_JIT_STATS=1`, printed on CPU Drop): executions, compiles, invalidations, slow loads/stores, sfence/satp counts.
 
+Current platform harness (2026-11-27): `./run.sh bench --runs 1` with the external-initrd
+kernel measured 23.6s / 113.4M steps / ~4.8M steps/s; hart 0: `execs=9.1M compiles=132k
+invalidations=247`. The harness captures the stderr counters and reports steps/s per run.
+
 Changes live in `components/cpu/rhetsim-cpu-riscv/src/cpu.rs` and `jit.rs`, committed on `dev` as `68efa75` (2026-11-26, pushed). The `--no-jit` CLI flag was committed earlier in `8de7816`.
 
 Failed experiment: inlining conditional-branch fall-through into the same native block (to raise the 5.6-insn average block length) made Linux hang in very early boot (only OpenSBI output; PC in `ct_kernel_exit`). It was fully reverted and not root-caused.

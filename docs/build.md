@@ -85,11 +85,16 @@ Simulator validation:
 ```bash
 ./run.sh test sim                              # cargo test --workspace in src/rhetsim
 ./run.sh test boot riscv-virt-2hart -- --no-jit # boot test with simulator flags
+./run.sh bench --runs 3                        # boot wall time + JIT counters
 ```
 
 `test sim` uses the instance worktree when present. The rhetsim `linux_boot`
 integration test skips when its sibling firmware/kernel artifacts are absent; use
 `test boot` for the platform-level boot check.
+
+`bench` runs the boot to `RHETSIM_INIT_OK` with `RHETSIM_JIT_STATS=1`, printing
+per-run wall time, guest steps, steps/s and the hart-0 JIT counters. Use
+`--no-jit` for an interpreter A/B baseline.
 
 ## Shared artifacts and the root filesystem
 

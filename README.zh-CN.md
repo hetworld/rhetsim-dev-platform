@@ -83,6 +83,8 @@ workspace/instances/<name>/
   模拟器参数，例如 `./run.sh test boot <name> -- --no-jit`。
 - `./run.sh test sim`：在实例 `src/rhetsim` worktree 里跑
   `cargo test --workspace`。
+- `./run.sh bench --runs 3`：测量 Linux 启动耗时并打印 JIT 统计；`--no-jit`
+  可跑解释器基线。
 
 详见 [docs/build.md](docs/build.md)、[docs/architecture.md](docs/architecture.md)。
 

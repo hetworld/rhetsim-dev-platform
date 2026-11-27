@@ -25,6 +25,7 @@ Boot test:
 ./run.sh test boot <name>
 ./run.sh test boot <name> -- --no-jit       # simulator flags after --
 ./run.sh test sim                            # cargo test --workspace in src/rhetsim
+./run.sh bench --runs 3                      # wall time + JIT stats per run
 ```
 
 Pass criteria: `Linux version` and `RHETSIM_INIT_OK` appear in `uart.log`.

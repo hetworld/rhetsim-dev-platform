@@ -92,6 +92,8 @@ workspace/instances/<name>/
   Pass simulator flags after `--`, e.g. `./run.sh test boot <name> -- --no-jit`.
 - `./run.sh test sim` runs `cargo test --workspace` in the instance's
   `src/rhetsim` worktree.
+- `./run.sh bench --runs 3` measures the Linux boot wall time and prints JIT
+  counters; pass `--no-jit` for an interpreter baseline.
 
 Details: [docs/build.md](docs/build.md), [docs/architecture.md](docs/architecture.md).
 

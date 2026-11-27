@@ -26,6 +26,7 @@ Commands:
   sdk <instance> [opts]        Package an SDK bundle
   publish [opts]               Publish an SDK (dry run by default)
   test [smoke|boot|sim|consumer] Run tests (default: smoke)
+  bench [opts]                 Benchmark the Linux boot (JIT stats)
   gc [opts]                    Garbage-collect the shared build cache
   pin <component> [ref]        Pin/update a component in env/versions.toml
   verify-lock                  Verify repos/ matches env/versions.toml
@@ -38,6 +39,7 @@ Examples:
   ./run.sh start riscv-virt-2hart --batch --steps 200000000
   ./run.sh test boot riscv-virt-2hart
   ./run.sh test sim
+  ./run.sh bench --runs 3
   ./run.sh sdk riscv-virt-2hart --version 0.1.0
   ./run.sh pin rhetsim dev --from-local /path/to/rhetsim
 EOF
@@ -128,6 +130,9 @@ case "$cmd" in
                 die "unknown test suite: $sub (expected smoke|boot|consumer)"
                 ;;
         esac
+        ;;
+    bench)
+        exec "$ROOT/scripts/tests/bench.sh" "$@"
         ;;
     gc)
         exec "$ROOT/scripts/cache-gc.sh" "$@"
