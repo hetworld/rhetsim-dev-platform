@@ -10,6 +10,7 @@
 | P2 | In progress | Reproducible simulator/OpenSBI/Linux build + prebuilt rootfs |
 | P3 | Planned | SDK packaging, consumer example, consumer-side CI |
 | P4 | Planned | Release automation, OCI image, sandboxed/parallel instance runs |
+| P5 | Planned | Simulator SoC / Board / Machine topology composition |
 
 ## P0 — skeleton (done)
 
@@ -61,3 +62,21 @@
 - Provide an OCI/devcontainer image (also solves the simulator's glibc host issue).
 - Add per-instance port allocation, tmux consoles, cgroup limits and an optional
   bubblewrap/container sandbox backend.
+
+## P5 — simulator topology abstraction (last task)
+
+- Split simulator platform sources into three declarative layers:
+  - **SoC** — chip-level units, buses, interrupt controllers, address map and CPU
+    profile(s).
+  - **Board** — DRAM/flash, external devices, clocks/resets, board DTS.
+  - **Machine** — board selection plus firmware, kernel, initrd, DTB and bootargs.
+- Resolve/merge the layers into the single existing flat `Manifest` at load time;
+  do not add three runtime topology object types.
+- Keep current flat manifests working as a compatibility path.
+- Validate duplicate unit IDs, address overlaps, dangling bus/IRQ references, and
+  SoC CPU profile vs DTS/kernel ISA consistency.
+- Pilot on the existing `riscv-virt` platform, then add K230 (C908) and VisionFive 2
+  (U74) compositions.
+
+This is intentionally the last roadmap item: it depends on stable CPU profiles,
+ISA coverage and device models from the earlier phases.
