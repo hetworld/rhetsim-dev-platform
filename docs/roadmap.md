@@ -76,6 +76,14 @@
 - [x] Boot regression matrix for `custom`, U74, C908 base and C908 full with
   golden signatures, interrupt-count checks and an interactive-shell probe
   (`./run.sh test boot-matrix`), plus nightly CI with artifact upload.
+- [x] Randomised JIT/interpreter difftest plus a Svnapot page test
+  (`components/cpu/rhetsim-cpu-riscv/tests/jit_difftest.rs`).
+- [x] riscv-tests compliance run under both engines (`./run.sh test isa`);
+  171 p-tests cover integer, M, A, F/D, bitmanip, Svnapot, S- and M-mode CSRs.
+  Remaining IEEE FP flag/canonical-NaN gaps are tracked as a known-failure list.
+- [ ] Complete IEEE FP compliance: exception flags (NV/DZ/OF/UF/NX),
+  canonical NaN output and `fcsr` rounding modes, then empty the known-gap list.
+- [ ] QEMU/Spike instruction-trace difftest (riscv-arch-test integration).
 - [ ] **M4** — finalize the custom simulator CPU profile after U74/C908 work:
   stable ISA subset, profile name, default-platform wiring and documentation.
 - [ ] **M5** — SoC / Board / Machine topology (last task):
