@@ -17,7 +17,7 @@ manifest = "platform.toml"
 dtb = "riscv-virt.dtb"
 
 [kernel]
-defconfig = "rv64ima_defconfig"
+defconfig = "rv64imac_defconfig"
 fragments = ["smp-2hart.config", "initramfs.config"]
 
 [run]

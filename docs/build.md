@@ -158,7 +158,11 @@ Optional maintainer tools (not part of `./run.sh build`):
 
 ## Important details
 
-- The CPU is `rv64ima` (no F/D), so user space must use the `lp64` soft-float ABI.
+- The CPU is `rhetsim-rv64imac` (I/M/A/C, no F/D), so user space must use the
+  `lp64` soft-float ABI. RISC-V CPU units choose a profile with `cpu_type`:
+  `rhetsim-rv64ima`, `rhetsim-rv64imac` (default), `sifive-u74`, or
+  `thead-c908`. The public SiFive/T-Head profiles are registration targets; the
+  CLI rejects them until all their declared extensions are implemented.
   A distro `riscv64-linux-gnu` toolchain defaults to `lp64d` and will fault.
   Always use the sysroot's `musl-gcc` for target programs.
 - The optional sysroot built by `tools/toolchain/` is static-only
@@ -174,7 +178,7 @@ Optional maintainer tools (not part of `./run.sh build`):
 - Build the kernel with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-`. A bare
   `make` reconfigures the tree for the host architecture.
 - The kernel defconfig is a full config captured from the working bring-up, not the
-  stale `linux-rv64ima.config` in the simulator repository. Fragments are merged with
+  stale `linux-rv64imac.config` in the simulator repository. Fragments are merged with
   the kernel's `scripts/kconfig/merge_config.sh`, so they can override defconfig
   values without duplicate-symbol `override: reassigning` warnings.
 

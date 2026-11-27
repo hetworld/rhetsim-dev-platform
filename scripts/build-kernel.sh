@@ -9,7 +9,7 @@ source "$ROOT/scripts/lib/common.sh"
 # shellcheck source=scripts/lib/patches.sh
 source "$ROOT/scripts/lib/patches.sh"
 
-CONFIG="$ENV_DIR/configs/linux/rv64ima_defconfig"
+CONFIG="$ENV_DIR/configs/linux/rv64imac_defconfig"
 FRAGMENTS=()
 PATCH_DIRS=()
 while [ $# -gt 0 ]; do
