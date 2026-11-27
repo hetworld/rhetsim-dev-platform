@@ -23,6 +23,8 @@ Boot test:
 
 ```bash
 ./run.sh test boot <name>
+./run.sh test boot <name> -- --no-jit       # simulator flags after --
+./run.sh test sim                            # cargo test --workspace in src/rhetsim
 ```
 
 Pass criteria: `Linux version` and `RHETSIM_INIT_OK` appear in `uart.log`.

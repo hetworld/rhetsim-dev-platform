@@ -1,5 +1,8 @@
 # Release
 
+> Status: planned for a later phase. The current focus is simulator development and
+> validation; the packaging/publish scripts are scaffolds, not an active workstream.
+
 ## Versioning
 
 Use semantic versions for SDK bundles (`MAJOR.MINOR.PATCH`), optionally with a

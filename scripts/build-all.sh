@@ -31,6 +31,17 @@ if [ ! -d "$ws" ]; then
 fi
 load_instance_env "$INSTANCE"
 
+# Simulator development uses the instance worktree when present.
+rhetsim_src="${RHETSIM_SRC:-}"
+if [ -z "$rhetsim_src" ]; then
+    if [ -e "$ws/src/rhetsim/.git" ]; then
+        rhetsim_src="$ws/src/rhetsim"
+    else
+        rhetsim_src="$REPOS_DIR/rhetsim"
+    fi
+fi
+export RHETSIM_SRC="$rhetsim_src"
+
 sim="$("$ROOT/scripts/build-simulator.sh" | tail -n1)"
 fw="$("$ROOT/scripts/build-firmware.sh" | tail -n1)"
 kernel="$("$ROOT/scripts/build-kernel.sh" \
@@ -60,7 +71,6 @@ if [ ! -f "$cpio" ]; then
     } > "$resource_dir/manifest.txt"
 fi
 
-rhetsim_src="${RHETSIM_SRC:-$REPOS_DIR/rhetsim}"
 dtb="$rhetsim_src/platforms/reference/server/riscv-virt.dtb"
 require_file "$dtb"
 

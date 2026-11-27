@@ -9,6 +9,7 @@ source "$ROOT/scripts/lib/common.sh"
 INSTANCE="$DEFAULT_INSTANCE"
 TIMEOUT="${BOOT_TIMEOUT:-180}"
 STEPS="${BOOT_STEPS:-200000000}"
+PASSTHROUGH=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --instance) INSTANCE="$2"; shift 2 ;;
@@ -17,8 +18,13 @@ while [ $# -gt 0 ]; do
         --timeout=*) TIMEOUT="${1#*=}"; shift ;;
         --steps) STEPS="$2"; shift 2 ;;
         --steps=*) STEPS="${1#*=}"; shift ;;
-        --help|-h) echo "usage: $0 [--instance NAME] [--timeout SEC] [--steps N]"; exit 0 ;;
-        *) die "unknown argument: $1" ;;
+        --) shift; PASSTHROUGH=("$@"); break ;;
+        --help|-h)
+            echo "usage: $0 [--instance NAME] [--timeout SEC] [--steps N] [-- simulator args...]"
+            echo "  e.g. $0 riscv-virt-2hart -- --no-jit"
+            exit 0
+            ;;
+        *) die "unknown argument: $1 (use -- before simulator args)" ;;
     esac
 done
 
@@ -31,7 +37,7 @@ done
 
 log "booting instance '$INSTANCE' (timeout ${TIMEOUT}s, steps $STEPS)"
 set +e
-timeout "$TIMEOUT" "$ROOT/run.sh" start "$INSTANCE" --batch --steps "$STEPS"
+timeout "$TIMEOUT" "$ROOT/run.sh" start "$INSTANCE" --batch --steps "$STEPS" "${PASSTHROUGH[@]}"
 rc=$?
 set -e
 

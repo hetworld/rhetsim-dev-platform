@@ -42,6 +42,11 @@ is built **without** an embedded initramfs; the rootfs is passed as an external
 initrd (`rhetsim-cli --initrd`, with `linux,initrd-start/end` in the DTB `/chosen`
 node), so a rootfs change does not rebuild the kernel.
 
+Simulator development: `build-all` prefers
+`workspace/instances/<name>/src/rhetsim` when the worktree exists. Run the
+simulator tests with `./run.sh test sim`, and pass debug flags to the boot test
+after `--`, e.g. `./run.sh test boot <name> -- --no-jit`.
+
 Optional maintainer tools (not part of `./run.sh build`):
 
 ```bash

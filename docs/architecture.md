@@ -43,7 +43,9 @@ An instance is a disposable environment with:
 - `logs/` — per-run UART, simulator and trace logs; `logs/latest` points at the
   most recent run.
 - `src/` — optional git worktrees for components that need local changes. The
-  canonical clones under `repos/` are the worktree parent.
+  canonical clones under `repos/` are the worktree parent. `build-all` prefers
+  `src/rhetsim` for the simulator and DTB; `./run.sh test sim` runs the simulator
+  workspace tests there.
 - `config/` — materialized copy of `env/instances/<name>/`.
 - `run/` — persistent disk overlays plus per-run sessions (`state`, `snapshot`,
   `ports.json`, `pid`).

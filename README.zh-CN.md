@@ -8,6 +8,8 @@
 > 预构建 rootfs）、实例生命周期、实例锁、SDK 打包和外部 initrd 启动均已验证；
 > 工具链和 rootfs 重建是 `tools/` 下的可选维护工具。迁移期间仍可以用
 > `./run.sh build <instance> --reuse-existing` 链接现有的 `rhet/` 构建产物。
+>
+> **当前重点：模拟器开发和验证。** SDK/发布（P3/P4）只做规划，不是当前工作流。
 
 ## 目录
 
@@ -72,11 +74,15 @@ workspace/instances/<name>/
 
 ## 构建与运行
 
-- `./run.sh build <name>`：构建 `rhetsim-cli`、OpenSBI 和 Linux，再组装预构建 rootfs。
+- `./run.sh build <name>`：构建 `rhetsim-cli`、OpenSBI 和 Linux，再组装预构建 rootfs；
+  模拟器源码优先使用实例 worktree `workspace/instances/<name>/src/rhetsim`。
 - `./run.sh start <name>`：交互式启动模拟器。
 - `./run.sh start <name> --batch`：非交互运行，日志写入
   `workspace/instances/<name>/logs/<run-id>/uart.log`。
-- `./run.sh test boot <name>`：启动 Linux 并检查 `RHETSIM_INIT_OK` 标记。
+- `./run.sh test boot <name>`：启动 Linux 并检查 `RHETSIM_INIT_OK` 标记；`--` 后可传
+  模拟器参数，例如 `./run.sh test boot <name> -- --no-jit`。
+- `./run.sh test sim`：在实例 `src/rhetsim` worktree 里跑
+  `cargo test --workspace`。
 
 详见 [docs/build.md](docs/build.md)、[docs/architecture.md](docs/architecture.md)。
 
@@ -87,6 +93,8 @@ tarball 和校验和。SDK 包含模拟器二进制、固件、内核、DTB、in
 示例和消费端脚本。需要 sysroot 时用可选维护工具
 `tools/toolchain/build-toolchain.sh` 构建。参见 [sdk/layout.md](sdk/layout.md) 和
 [docs/sdk-spec.md](docs/sdk-spec.md)。
+
+> SDK/发布后续再规划；当前重点是模拟器开发和验证。
 
 不要把大二进制提交进 git：通过 GitHub Releases、OCI 镜像或软件平台的下载脚本分发。
 

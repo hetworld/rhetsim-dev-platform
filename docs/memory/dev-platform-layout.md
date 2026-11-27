@@ -39,6 +39,9 @@ Rules:
   the DTB `/chosen` node. Rootfs changes do not rebuild the kernel.
 - Toolchain and rootfs rebuilds are optional maintainer tools under `tools/`; keep
   them out of the default `./run.sh build` path.
+- Simulator development uses `workspace/instances/<name>/src/rhetsim`; `build-all`
+  prefers it and `./run.sh test sim` runs the workspace tests. Current focus is
+  simulator development/validation; SDK/release is planned.
 - One active run per instance is enforced with `run/lock` (`flock`).
 - Never commit `repos/`, `workspace/`, or `.claude/settings.local.json`.
 - `env/versions.toml` is a committed lock file: builds only read it. Update pins

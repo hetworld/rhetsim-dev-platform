@@ -1,5 +1,8 @@
 # Roadmap
 
+> Current focus: simulator development and validation (P2). SDK/release (P3/P4)
+> are planned but not an active workstream.
+
 | Phase | Status | Goal |
 |---|---|---|
 | P0 | Done | Repository skeleton, instance model, scripts, Claude assets, reuse-existing boot path |
@@ -38,7 +41,9 @@
 
 - Default build: simulator + OpenSBI + Linux + prebuilt rootfs resource.
 - Keep each build stage reproducible and cached by content hash.
-- Add instance-specific patches and worktree builds.
+- [x] Simulator development uses `workspace/instances/<name>/src/rhetsim`; `build-all`
+  prefers it and `./run.sh test sim` runs the workspace tests.
+- [ ] Add instance-specific patches.
 - [x] Verified 2026-11-27: `fetch` + `verify-lock` (4 components) → lean `build-all`
   (sim + OpenSBI + Linux + prebuilt rootfs) → instance boot and SDK boot both reach
   `RHETSIM_INIT_OK`.

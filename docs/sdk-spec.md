@@ -1,5 +1,8 @@
 # SDK specification
 
+> Status: planned for a later phase. The current focus is simulator development and
+> validation; `package-sdk.sh`/`publish-sdk.sh` are scaffolds.
+
 The SDK is the release contract from `rhetsim-dev-platform` (source/build) to
 `rhetsim-software-dev-platform` (binary/system-software development).
 

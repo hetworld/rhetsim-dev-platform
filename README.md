@@ -10,6 +10,9 @@ initramfs, run isolated instances, and package SDK bundles for
 > external-initrd boot are verified. Toolchain and rootfs rebuilds are optional
 > maintainer tools under `tools/`. During migration an instance can still link an
 > existing `rhet/` tree with `./run.sh build <instance> --reuse-existing`.
+>
+> **Current focus: simulator development and validation.** SDK/release is planned
+> (P3/P4) but is not an active workstream.
 
 ## Layout
 
@@ -80,11 +83,15 @@ workspace/instances/<name>/
 ## Build and run
 
 - `./run.sh build <name>` builds `rhetsim-cli`, OpenSBI and Linux, then assembles
-  the prebuilt rootfs.
+  the prebuilt rootfs. It prefers the instance worktree
+  `workspace/instances/<name>/src/rhetsim` when present.
 - `./run.sh start <name>` starts the simulator interactively.
 - `./run.sh start <name> --batch` runs non-interactively and writes
   `workspace/instances/<name>/logs/<run-id>/uart.log`.
 - `./run.sh test boot <name>` boots Linux and asserts the `RHETSIM_INIT_OK` marker.
+  Pass simulator flags after `--`, e.g. `./run.sh test boot <name> -- --no-jit`.
+- `./run.sh test sim` runs `cargo test --workspace` in the instance's
+  `src/rhetsim` worktree.
 
 Details: [docs/build.md](docs/build.md), [docs/architecture.md](docs/architecture.md).
 
@@ -96,6 +103,9 @@ DTB, initramfs, optional sysroot, examples and consumer scripts. Build the sysro
 with the optional maintainer tool `tools/toolchain/build-toolchain.sh` if the SDK
 should include one. See [sdk/layout.md](sdk/layout.md) and
 [docs/sdk-spec.md](docs/sdk-spec.md).
+
+> SDK/release is planned for a later phase; the current focus is simulator
+> development and validation.
 
 Never commit large binaries to git: release them through GitHub Releases, an OCI
 image, or the software-dev-platform's download scripts.

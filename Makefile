@@ -4,7 +4,7 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 export ROOT
 
-.PHONY: help check-host fetch verify-lock pin create build run sdk test clean
+.PHONY: help check-host fetch verify-lock pin create build run sdk test test-sim clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target> [INSTANCE=<name>] [ARGS=\"...\"]\n\nTargets (thin aliases for ./run.sh):\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -35,6 +35,9 @@ sdk: ## Package an SDK bundle from the instance
 
 test: ## Run smoke tests
 	@./run.sh test smoke
+
+test-sim: ## Run simulator cargo tests
+	@./run.sh test sim
 
 clean: ## Remove an instance workspace (keeps env/instances definition)
 	@./run.sh clean --instance $(INSTANCE)

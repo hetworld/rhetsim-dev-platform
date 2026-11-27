@@ -25,7 +25,7 @@ Commands:
   destroy <instance>           Remove the instance workspace
   sdk <instance> [opts]        Package an SDK bundle
   publish [opts]               Publish an SDK (dry run by default)
-  test [smoke|boot|consumer]   Run tests (default: smoke)
+  test [smoke|boot|sim|consumer] Run tests (default: smoke)
   gc [opts]                    Garbage-collect the shared build cache
   pin <component> [ref]        Pin/update a component in env/versions.toml
   verify-lock                  Verify repos/ matches env/versions.toml
@@ -37,6 +37,7 @@ Examples:
   ./run.sh build riscv-virt-2hart --reuse-existing /path/to/rhet
   ./run.sh start riscv-virt-2hart --batch --steps 200000000
   ./run.sh test boot riscv-virt-2hart
+  ./run.sh test sim
   ./run.sh sdk riscv-virt-2hart --version 0.1.0
   ./run.sh pin rhetsim dev --from-local /path/to/rhetsim
 EOF
@@ -116,6 +117,9 @@ case "$cmd" in
                     exec "$ROOT/scripts/tests/boot-linux.sh" --instance "$inst" "$@"
                 fi
                 exec "$ROOT/scripts/tests/boot-linux.sh" "$@"
+                ;;
+            sim)
+                exec "$ROOT/scripts/tests/sim.sh" "$@"
                 ;;
             consumer)
                 exec "$ROOT/scripts/tests/consumer-ci.sh" "$@"

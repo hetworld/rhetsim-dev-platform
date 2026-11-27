@@ -59,10 +59,12 @@ the pinned commit (detached HEAD). The lock format also supports tarball resourc
 ```
 
 - `create` copies `env/instances/<name>/` into
-  `workspace/instances/<name>/config/` and optionally creates a git worktree for
-  `rhetsim` under `src/`.
-- `build` reuses `workspace/shared/build/` and links the artifacts into the
-  instance `bin/` by default. Use `--copy` for independent copies.
+  `workspace/instances/<name>/config/` and creates a `rhetsim` git worktree under
+  `src/` when `repos/rhetsim` is available.
+- `build` builds the simulator from `workspace/instances/<name>/src/rhetsim` when
+  present (falling back to `repos/rhetsim`), builds OpenSBI/Linux from `repos/`,
+  and links all artifacts into the instance `bin/` by default. Use `--copy` for
+  independent copies.
 - During migration, skip a full rebuild by linking an existing `rhet/` tree:
 
   ```bash
@@ -77,6 +79,17 @@ the pinned commit (detached HEAD). The lock format also supports tarball resourc
   external-initrd layout.
 - The underlying implementations remain in `scripts/instance-*.sh`; `./run.sh` is
   the single command entry.
+
+Simulator validation:
+
+```bash
+./run.sh test sim                              # cargo test --workspace in src/rhetsim
+./run.sh test boot riscv-virt-2hart -- --no-jit # boot test with simulator flags
+```
+
+`test sim` uses the instance worktree when present. The rhetsim `linux_boot`
+integration test skips when its sibling firmware/kernel artifacts are absent; use
+`test boot` for the platform-level boot check.
 
 ## Shared artifacts and the root filesystem
 
