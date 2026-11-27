@@ -25,7 +25,8 @@ Commands:
   destroy <instance>           Remove the instance workspace
   sdk <instance> [opts]        Package an SDK bundle
   publish [opts]               Publish an SDK (dry run by default)
-  test [smoke|boot|sim|consumer] Run tests (default: smoke)
+  test [smoke|boot|boot-matrix|sim|consumer]
+                               Run tests (default: smoke)
   bench [opts]                 Benchmark the Linux boot (JIT stats)
   gc [opts]                    Garbage-collect the shared build cache
   pin <component> [ref]        Pin/update a component in env/versions.toml
@@ -120,6 +121,9 @@ case "$cmd" in
                 fi
                 exec "$ROOT/scripts/tests/boot-linux.sh" "$@"
                 ;;
+            boot-matrix)
+                exec "$ROOT/scripts/tests/boot-matrix.sh" "$@"
+                ;;
             sim)
                 exec "$ROOT/scripts/tests/sim.sh" "$@"
                 ;;
@@ -127,7 +131,7 @@ case "$cmd" in
                 exec "$ROOT/scripts/tests/consumer-ci.sh" "$@"
                 ;;
             *)
-                die "unknown test suite: $sub (expected smoke|boot|consumer)"
+                die "unknown test suite: $sub (expected smoke|boot|boot-matrix|sim|consumer)"
                 ;;
         esac
         ;;

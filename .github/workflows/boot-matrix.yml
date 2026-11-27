@@ -1,0 +1,78 @@
+name: boot-matrix
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [rhetsim-dev]
+  schedule:
+    # Nightly, off the hour to avoid the fleet-wide cron spike.
+    - cron: "17 3 * * *"
+  pull_request:
+    paths:
+      - "env/**"
+      - "run.sh"
+      - "scripts/**"
+      - ".github/workflows/boot-matrix.yml"
+
+concurrency:
+  group: boot-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  boot:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison build-essential cpio file flex libelf-dev libssl-dev \
+            python3 rsync gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # env/versions.toml uses SSH URLs for the component repositories. They
+      # are public, so rewrite them to HTTPS for tokenless checkout.
+      - name: Use HTTPS for component repositories
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Restore component and build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            repos
+            workspace/shared
+          key: boot-${{ runner.os }}-${{ hashFiles('env/versions.toml') }}
+          restore-keys: |
+            boot-${{ runner.os }}-
+
+      - name: Fetch pinned sources
+        run: ./run.sh fetch
+
+      - name: Verify lock
+        run: ./run.sh verify-lock
+
+      - name: Create instance
+        run: ./run.sh create riscv-virt-2hart
+
+      - name: Build platform
+        run: ./run.sh build riscv-virt-2hart
+
+      - name: Boot matrix (custom, U74, C908 base/full)
+        run: ./run.sh test boot-matrix riscv-virt-2hart
+        env:
+          BOOT_TIMEOUT: "240"
+
+      - name: Upload boot logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boot-matrix-logs
+          path: workspace/instances/riscv-virt-2hart/logs/matrix-*
+          if-no-files-found: warn

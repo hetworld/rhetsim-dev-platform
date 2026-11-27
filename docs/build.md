@@ -85,12 +85,33 @@ Simulator validation:
 ```bash
 ./run.sh test sim                              # cargo test --workspace in src/rhetsim
 ./run.sh test boot riscv-virt-2hart -- --no-jit # boot test with simulator flags
+./run.sh test boot-matrix riscv-virt-2hart     # custom, U74, C908 base/full
 ./run.sh bench --runs 3                        # boot wall time + JIT counters
 ```
 
 `test sim` uses the instance worktree when present. The rhetsim `linux_boot`
 integration test skips when its sibling firmware/kernel artifacts are absent; use
 `test boot` for the platform-level boot check.
+
+`test boot-matrix` boots every CPU profile (`custom`, `u74`, `c908`,
+`c908-full`) with the reference manifest/DTB from the simulator source tree and
+checks each run for:
+
+- the `Linux version` and `RHETSIM_INIT_*` markers,
+- two-CPU `/proc/interrupts` snapshots whose PLIC and local-interrupt counts are
+  non-zero and do not go backwards,
+- a signature (`Linux version` + `RHETSIM_*` lines) matching
+  `env/configs/golden/boot/<profile>.txt`,
+- an interactive shell (`RHETSIM_SHELL_OK` and the `/proc/cpuinfo` ISA line).
+
+New reference profiles come from
+`platforms/reference/server/riscv-virt-<profile>.toml|dtb` in the instance
+worktree. Pass `--profiles "custom u74"` to narrow the matrix, `--no-shell` to
+skip the interactive check, and `--update-golden` to refresh signatures after an
+intentional boot change. CI runs the full matrix nightly and on pull requests that
+touch the platform scripts or lock file
+(`.github/workflows/boot-matrix.yml`); a simulator push can trigger it through a
+`repository_dispatch` of type `rhetsim-dev`.
 
 `bench` runs the boot to `RHETSIM_INIT_OK` with `RHETSIM_JIT_STATS=1`, printing
 per-run wall time, guest steps, steps/s and the hart-0 JIT counters. Use

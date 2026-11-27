@@ -10,7 +10,7 @@
 | P2 | In progress | Reproducible simulator/OpenSBI/Linux build + prebuilt rootfs |
 | P3 | Planned | SDK packaging, consumer example, consumer-side CI |
 | P4 | Planned | Release automation, OCI image, sandboxed/parallel instance runs |
-| P5 | In progress (M1 done) | Simulator CPU profiles M1–M4 + SoC / Board / Machine topology M5 |
+| P5 | In progress (M3 done) | Simulator CPU profiles M1–M4 + SoC / Board / Machine topology M5 |
 
 ## P0 — skeleton (done)
 
@@ -68,10 +68,14 @@
 - [x] **M1** — CPU profile infrastructure and custom `rhetsim-rv64imac`:
   `RiscvCpuType`/`CpuProfile` with declared vs implemented extensions, `misa`
   derivation, compressed-instruction gating, and DTS/kernel alignment.
-- [ ] **M2** — SiFive U74 alignment: F/D, Zba/Zbb, Sscofpmf, DTS/kernel config and
+- [x] **M2** — SiFive U74 alignment: F/D, Zba/Zbb, Sscofpmf, DTS/kernel config and
   boot tests.
-- [ ] **M3** — T-Head C908 alignment: F/D, B, CMO/Svinval/Svnapot/Svpbmt, SSTC,
-  Sscofpmf, Smepmp, XThead, and optional V; DTS/kernel config and boot tests.
+- [x] **M3** — T-Head C908 alignment: F/D, B, CMO/Svinval/Svnapot/Svpbmt, SSTC,
+  Sscofpmf, Smepmp, XThead, and optional V; DTS/kernel config and boot tests. The
+  base profile and the full profile (Smepmp + XThead) both boot Linux.
+- [x] Boot regression matrix for `custom`, U74, C908 base and C908 full with
+  golden signatures, interrupt-count checks and an interactive-shell probe
+  (`./run.sh test boot-matrix`), plus nightly CI with artifact upload.
 - [ ] **M4** — finalize the custom simulator CPU profile after U74/C908 work:
   stable ISA subset, profile name, default-platform wiring and documentation.
 - [ ] **M5** — SoC / Board / Machine topology (last task):
