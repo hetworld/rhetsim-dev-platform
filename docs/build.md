@@ -154,7 +154,9 @@ Optional maintainer tools (not part of `./run.sh build`):
 - Build the kernel with `make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-`. A bare
   `make` reconfigures the tree for the host architecture.
 - The kernel defconfig is a full config captured from the working bring-up, not the
-  stale `linux-rv64ima.config` in the simulator repository.
+  stale `linux-rv64ima.config` in the simulator repository. Fragments are merged with
+  the kernel's `scripts/kconfig/merge_config.sh`, so they can override defconfig
+  values without duplicate-symbol `override: reassigning` warnings.
 
 ## Cleaning
 

@@ -50,11 +50,26 @@ fi
 
 log "building Linux without embedded initramfs ($build_id)"
 mkdir -p "$out/build"
-cp "$CONFIG" "$out/build/.config"
-for f in "${FRAGMENTS[@]}"; do
-    require_file "$f"
-    cat "$f" >> "$out/build/.config"
-done
+if [ ${#FRAGMENTS[@]} -eq 0 ]; then
+    cp "$CONFIG" "$out/build/.config"
+else
+    # Merge fragments instead of appending them: appending duplicates symbols
+    # already present in the full defconfig, which makes olddefconfig print
+    # "override: reassigning to symbol ..." warnings.
+    merge_tool="$LINUX_SRC/scripts/kconfig/merge_config.sh"
+    require_file "$merge_tool"
+    config_abs="$(readlink -f -- "$CONFIG")"
+    fragments_abs=()
+    for f in "${FRAGMENTS[@]}"; do
+        require_file "$f"
+        fragments_abs+=("$(readlink -f -- "$f")")
+    done
+    if ! merge_output="$(cd "$out/build" && \
+        "$merge_tool" -m -O . "$config_abs" "${fragments_abs[@]}" 2>&1)"; then
+        printf '%s\n' "$merge_output" >&2
+        die "failed to merge kernel config fragments"
+    fi
+fi
 
 make -C "$LINUX_SRC" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- olddefconfig
 make -C "$LINUX_SRC" O="$out/build" ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j"$(nproc)"
