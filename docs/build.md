@@ -160,9 +160,10 @@ Optional maintainer tools (not part of `./run.sh build`):
 
 - The CPU is `rhetsim-rv64imac` (I/M/A/C, no F/D), so user space must use the
   `lp64` soft-float ABI. RISC-V CPU units choose a profile with `cpu_type`:
-  `rhetsim-rv64ima`, `rhetsim-rv64imac` (default), `sifive-u74`, or
-  `thead-c908`. The public SiFive/T-Head profiles are registration targets; the
-  CLI rejects them until all their declared extensions are implemented.
+  `rhetsim-rv64ima`, `rhetsim-rv64imac` (default), `sifive-u74`, `thead-c908`,
+  or `thead-c908-full` (C908 plus Smepmp and the XThead vendor extensions).
+  All registered profiles are fully implemented; the CLI rejects any profile
+  whose declared extensions are not implemented.
   A distro `riscv64-linux-gnu` toolchain defaults to `lp64d` and will fault.
   Always use the sysroot's `musl-gcc` for target programs.
 - The optional sysroot built by `tools/toolchain/` is static-only
