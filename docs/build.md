@@ -98,11 +98,10 @@ integration test skips when its sibling firmware/kernel artifacts are absent; us
 `workspace/shared/isa-tests/<ref>/`, builds the `rv64*-p-*` tests with the Linux
 RISC-V cross toolchain, and runs each test through both the JIT and the
 interpreter. The covered groups are `rv64ui/uc/um/ua/uf/ud`, `rv64uzba/zbb/zbc/zbs`,
-`rv64ssvnapot`, `rv64si` and `rv64mi`. IEEE FP flag/NaN-canonicalisation tests
-are tracked in `KNOWN_FP_GAPS` in
-`components/cpu/rhetsim-cpu-riscv/tests/isa_compliance.rs` until the FP
-compliance work lands; a known-gap test that starts passing fails the run so the
-list stays current.
+`rv64ssvnapot`, `rv64si` and `rv64mi`, and all of them pass under both engines.
+`KNOWN_FP_GAPS` in `components/cpu/rhetsim-cpu-riscv/tests/isa_compliance.rs`
+is an empty escape hatch for future documented gaps; a listed test that starts
+passing fails the run so the list cannot go stale.
 
 `test boot-matrix` boots every CPU profile (`custom`, `u74`, `c908`,
 `c908-full`) with the reference manifest/DTB from the simulator source tree and

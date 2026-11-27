@@ -81,8 +81,10 @@
 - [x] riscv-tests compliance run under both engines (`./run.sh test isa`);
   171 p-tests cover integer, M, A, F/D, bitmanip, Svnapot, S- and M-mode CSRs.
   Remaining IEEE FP flag/canonical-NaN gaps are tracked as a known-failure list.
-- [ ] Complete IEEE FP compliance: exception flags (NV/DZ/OF/UF/NX),
-  canonical NaN output and `fcsr` rounding modes, then empty the known-gap list.
+- [x] IEEE FP compliance: exception flags (NV/DZ/OF/UF/NX), canonical NaN
+  output, NaN boxing, `fcsr` rounding modes and the integer conversions are
+  modelled in the interpreter and JIT; all 171 riscv-tests pass in both
+  engines. (RMM ties and non-RNE int->FP rounding remain approximated.)
 - [ ] QEMU/Spike instruction-trace difftest (riscv-arch-test integration).
 - [ ] **M4** — finalize the custom simulator CPU profile after U74/C908 work:
   stable ISA subset, profile name, default-platform wiring and documentation.

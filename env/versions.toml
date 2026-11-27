@@ -6,7 +6,7 @@
 [components.rhetsim]
 type = "git"
 url = "git@github.com:hetworld/rhetsim.git"
-ref = "75e760143923b48fc35b5aca0d32cf14d929899f"
+ref = "13a909feac80b4e6c1f8569ed4d3a234549b869f"
 branch = "dev"
 path = "rhetsim"
 
