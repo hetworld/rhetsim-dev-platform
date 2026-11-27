@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build a RhetSim instance or individual components (simulator, OpenSBI, Linux). Use when artifacts are missing, a pinned ref changed, or a build fails. The rootfs is a prebuilt resource; toolchain/initramfs rebuilds are optional tools.
+description: Build a RhetSim instance or individual components (simulator, OpenSBI, Linux), and validate Rust changes. Use when artifacts are missing, a pinned ref changed, a build fails, or simulator Rust code was modified. The rootfs is a prebuilt resource; toolchain/initramfs rebuilds are optional tools.
 ---
 
 # Build
@@ -46,6 +46,32 @@ Simulator development: `build-all` prefers
 `workspace/instances/<name>/src/rhetsim` when the worktree exists. Run the
 simulator tests with `./run.sh test sim`, and pass debug flags to the boot test
 after `--`, e.g. `./run.sh test boot <name> -- --no-jit`.
+
+## Mandatory formatting check after code changes
+
+After every change to Rust code, run this from the simulator worktree before
+building, testing or committing:
+
+```bash
+cd workspace/instances/<name>/src/rhetsim
+cargo fmt --all -- --check
+```
+
+If the check fails:
+
+```bash
+cargo fmt --all
+cargo fmt --all -- --check
+```
+
+Include the formatting in the same change; never commit or push unformatted Rust.
+This is exactly the CI "Format check" step (`cargo fmt --all -- --check`), so do
+not rely on CI to catch it. For a complete validation pass, follow with:
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+```
 
 Optional maintainer tools (not part of `./run.sh build`):
 
