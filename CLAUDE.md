@@ -33,3 +33,6 @@
 - Prefer the project skills in `.claude/skills/` for build, run/debug, release and
   memory workflows. They are thin playbooks; the real logic is in `scripts/`.
 - When historical context matters, read `docs/memory/MEMORY.md` first.
+- rhetsim branch workflow: `dev` is the development base; large tasks use
+  task-scoped branches from latest `dev` and PR back to `dev`. See
+  `.claude/skills/git-workflow/SKILL.md`.
